@@ -105,6 +105,11 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
             if let lat = self.locationManager.location?.coordinate.latitude {
                 self.latitude = lat
             }
+            self.firstLoad = true
+            if self.locationText != "here" {
+                self.clearArrays()
+            }
+            self.locationTextField.text = ""
             self.locationTextField.text = "here"
             self.getLocation(self.locationTextField.text!)
         }

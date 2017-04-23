@@ -82,6 +82,8 @@ class PondMapViewController: UIViewController, CLLocationManagerDelegate, MKMapV
                  self.latitude = lat
             }
             self.setMapCenter()
+            self.locationTextField.text = ""
+            self.locationTextField.text = "here"
             self.getLocation(self.locationTextField.text!)
         }
     }
