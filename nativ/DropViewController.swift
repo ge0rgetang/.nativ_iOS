@@ -52,9 +52,14 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
     var scrollToTopButton = UIButton()
     var dimView = UIView()
     
+    let loadingImageArray: [UIImage] = [UIImage(named: "loading1")!, UIImage(named: "loading2")!, UIImage(named: "loading3")!, UIImage(named: "loading4")!, UIImage(named: "loading5")!, UIImage(named: "loading6")!, UIImage(named: "loading7")!, UIImage(named: "loading7")!]
+
     weak var editPondParentDelegate: EditPondParentProtocol?
     
     var ref = FIRDatabase.database().reference()
+    
+    var settingsButton = UIButton()
+    var settingsBarButton = UIBarButtonItem()
     
     @IBOutlet weak var dropTableView: UITableView!
     
@@ -90,6 +95,14 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(self.handleRefreshControl), for: .valueChanged)
         self.dropTableView.addSubview(refreshControl)
+        
+        self.settingsButton.setImage(UIImage(named: "settingsUnselected"), for: .normal)
+        self.settingsButton.setImage(UIImage(named: "settingsSelected"), for: .selected)
+        self.settingsButton.setImage(UIImage(named: "settingsSelected"), for: .highlighted)
+        self.settingsButton.frame = CGRect(x: 0, y: 0, width: 30, height: 30)
+        self.settingsButton.addTarget(self, action: #selector(self.presentParentOptions), for: .touchUpInside)
+        self.settingsBarButton.customView = self.settingsButton
+        self.navigationItem.rightBarButtonItem = self.settingsBarButton
         
         self.textView.delegate = self
         self.textView.text = "reply..."
@@ -179,11 +192,11 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             return 1
         }
         
-        if self.replyPosts.isEmpty {
+        if self.replyPosts.count == 1 {
             return 2
         }
         
-        return self.replyPosts.count + 1
+        return self.replyPosts.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -207,22 +220,28 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             if let handle = individualPost["userHandle"] as? String {
                 if let imageURL = individualPost["imageURL"] as? URL {
                     cell = tableView.dequeueReusableCell(withIdentifier: "pondHeaderImageCell") as! PostTableViewCell
-                    cell.postImageView.sd_setImage(with: imageURL, completed: { (image, error, cacheType, url) in
-                        cell.layoutIfNeeded()
-                    })
+                    let placeholder = UIImage.animatedImage(with: self.loadingImageArray, duration: 0.33)
+                    let block: SDExternalCompletionBlock = { (image, error, cacheType, url) -> Void in
+                        cell.postImageView.image = image
+                        cell.postImageView.contentMode = .scaleAspectFill
+                        cell.setNeedsLayout()
+                    }
+                    cell.postImageView.contentMode = .scaleAspectFit
+                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: placeholder, options: .progressiveDownload, completed: block)
                     let tapToViewImage = UITapGestureRecognizer(target: self, action: #selector(self.presentImage))
                     cell.postImageView.addGestureRecognizer(tapToViewImage)
                 } else {
                     cell = tableView.dequeueReusableCell(withIdentifier: "pondHeaderCell") as! PostTableViewCell
                 }
                 
+                cell.contentView.backgroundColor = .white
                 cell.userPicImageView.layer.cornerRadius = cell.userPicImageView.frame.size.width/2
                 cell.userPicImageView.clipsToBounds = true
                 let picURL = self.parentPost["picURL"] as! URL
                 cell.userPicImageView.sd_setImage(with: picURL)
                 cell.userNameLabel.text = self.parentPost["userName"] as? String
                 cell.userHandleLabel.text = "@\(handle)"
-                cell.postContentTextView.attributedText = misc.stringWithColoredTags(postContent, time: "default", fontSize: 18)
+                cell.postContentTextView.attributedText = misc.stringWithColoredTags(postContent, time: "default", fontSize: 18, timeSize: 18)
 
                 if userID != self.myID && self.myID > 0 {
                     let tapPicToViewUser = UITapGestureRecognizer(target: self, action: #selector(self.presentUserProfileFromParent))
@@ -236,13 +255,20 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             } else {
                 if let imageURL = self.parentPost["imageURL"] as? URL {
                     cell = tableView.dequeueReusableCell(withIdentifier: "anonHeaderImageCell") as! PostTableViewCell
-                    cell.postImageView.sd_setImage(with: imageURL, completed: { (image, error, cacheType, url) in
-                        cell.layoutIfNeeded()
-                    })
+                    let placeholder = UIImage.animatedImage(with: self.loadingImageArray, duration: 0.33)
+                    let block: SDExternalCompletionBlock = { (image, error, cacheType, url) -> Void in
+                        cell.postImageView.image = image
+                        cell.postImageView.contentMode = .scaleAspectFill
+                        cell.setNeedsLayout()
+                    }
+                    cell.postImageView.contentMode = .scaleAspectFit
+                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: placeholder, options: .progressiveDownload, completed: block)
+                    let tapToViewImage = UITapGestureRecognizer(target: self, action: #selector(self.presentImage))
+                    cell.postImageView.addGestureRecognizer(tapToViewImage)
                 } else {
                     cell = tableView.dequeueReusableCell(withIdentifier: "anonHeaderCell") as! PostTableViewCell
                 }
-                cell.postContentTextView.attributedText = misc.anonStringWithColoredTags(postContent, time: "default", fontSize: 18)
+                cell.postContentTextView.attributedText = misc.anonStringWithColoredTags(postContent, time: "default", fontSize: 18, timeSize: 18)
             }
             
             if userID != self.myID {
@@ -285,7 +311,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             return cell
         }
         
-        if self.replyPosts.isEmpty && indexPath.row == 1 {
+        if self.replyPosts.count == 1 && indexPath.row == 1 {
             let cell = tableView.dequeueReusableCell(withIdentifier: "anonReplyCell", for: indexPath) as! PostTableViewCell
             cell.postContentTextView.textColor = .lightGray
             if self.firstLoad {
@@ -297,18 +323,21 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         }
         
         var cell: PostTableViewCell
-        let individualPost = self.replyPosts[indexPath.row - 1]
+        let individualPost = self.replyPosts[indexPath.row]
         let postContent = individualPost["postContent"] as! String
         let timestamp = individualPost["timestamp"] as! String
         
         if self.isAnon {
             cell = tableView.dequeueReusableCell(withIdentifier: "anonReplyCell", for: indexPath) as! PostTableViewCell
-            
+            cell.contentView.backgroundColor = .white
+
             let string = "\(timestamp)" + "\r\n" + "\(postContent)"
-            cell.postContentTextView.attributedText = misc.anonStringWithColoredTags(string, time: timestamp, fontSize: 18)
+            cell.postContentTextView.attributedText = misc.anonStringWithColoredTags(string, time: timestamp, fontSize: 18, timeSize: 14)
             
         } else {
             cell = tableView.dequeueReusableCell(withIdentifier: "pondReplyCell", for: indexPath) as! PostTableViewCell
+            cell.contentView.backgroundColor = .white
+
             cell.userPicImageView.layer.cornerRadius = cell.userPicImageView.frame.size.width/2
             cell.userPicImageView.clipsToBounds = true
             let picURL = individualPost["picURL"] as! URL
@@ -316,7 +345,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             
             let userHandle = individualPost["userHandle"] as! String
             let string = "@\(userHandle) \(timestamp)" + "\r\n" + "\(postContent)"
-            cell.postContentTextView.attributedText = misc.stringWithColoredTags(string, time: timestamp, fontSize: 18)
+            cell.postContentTextView.attributedText = misc.stringWithColoredTags(string, time: timestamp, fontSize: 18, timeSize: 14)
             let tapWord = UITapGestureRecognizer(target: self, action: #selector(self.textViewTapped))
             cell.postContentTextView.addGestureRecognizer(tapWord)
             
@@ -499,6 +528,8 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         editPostPopViewController.postSubType = "parent"
         if let editPopoverController = editPostPopViewController.popoverPresentationController {
             editPopoverController.delegate = self
+            editPopoverController.sourceView = cell.postContentTextView
+            editPopoverController.sourceRect = cell.postContentTextView.bounds
         }
         
         let reportPopViewController = storyboard?.instantiateViewController(withIdentifier: "ReportPopViewController") as! ReportPopViewController
@@ -850,12 +881,6 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                     self.textViewBottomConstraint.constant += keyboardSize.height
                     UIView.animate(withDuration: 1.0, animations: { self.view.layoutIfNeeded() })
                 }
-            } else {
-                self.dimBackground(true)
-                if self.view.frame.origin.y == 0 {
-                    self.view.frame.origin.y -= keyboardSize.height - self.textView.frame.size.height - 16
-                    UIView.animate(withDuration: 1.0, animations: { self.view.layoutIfNeeded() })
-                }
             }
         }
     }
@@ -864,9 +889,6 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         if let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
             if !self.isEditingPost {
                 self.textViewBottomConstraint.constant = 8 + keyboardSize.height
-                UIView.animate(withDuration: 1.0, animations: { self.view.layoutIfNeeded() })
-            } else {
-                self.view.frame.origin.y = -keyboardSize.height + self.textView.frame.size.height + 16
                 UIView.animate(withDuration: 1.0, animations: { self.view.layoutIfNeeded() })
             }
         }
@@ -877,11 +899,6 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         if !self.isEditingPost {
             if self.textViewBottomConstraint.constant != 8 {
                 self.textViewBottomConstraint.constant = 8
-                UIView.animate(withDuration: 1.0, animations: { self.view.layoutIfNeeded() })
-            }
-        } else {
-            if self.view.frame.origin.y != 0 {
-                self.view.frame.origin.y = 0
                 UIView.animate(withDuration: 1.0, animations: { self.view.layoutIfNeeded() })
             }
         }
@@ -1266,11 +1283,10 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             cell.shareCountLabel.text = "\(newShareCount)"
             
             if let imageURL = individualPost["imageURL"] as? URL {
-                self.sharePost(postContent, socialMedia: "Facebook", imageURL: imageURL, orView: nil)
+                self.sharePost(postContent, socialMedia: "Facebook", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
             } else {
-                self.sharePost(postContent, socialMedia: "Facebook", imageURL: nil, orView: cell.whiteView)
+                self.sharePost(postContent, socialMedia: "Facebook", imageURL: nil, orView: cell.contentView, newShareCount: newShareCount)
             }
-            self.parentPost["shareCount"] = newShareCount
         })
         alertController.addAction(shareFBAction)
         
@@ -1279,11 +1295,10 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             cell.shareCountLabel.text = "\(newShareCount)"
             
             if let imageURL = individualPost["imageURL"] as? URL {
-                self.sharePost(postContent, socialMedia: "Twitter", imageURL: imageURL, orView: nil)
+                self.sharePost(postContent, socialMedia: "Twitter", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
             } else {
-                self.sharePost(postContent, socialMedia: "Twitter", imageURL: nil, orView: cell.whiteView)
+                self.sharePost(postContent, socialMedia: "Twitter", imageURL: nil, orView: cell.contentView, newShareCount: newShareCount)
             }
-            self.parentPost["shareCount"] = newShareCount
         })
         alertController.addAction(shareTwitterAction)
         
@@ -1298,7 +1313,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         })
     }
     
-    func sharePost(_ postContent: String, socialMedia: String, imageURL: URL?, orView: UIView?) {
+    func sharePost(_ postContent: String, socialMedia: String, imageURL: URL?, orView: UIView?, newShareCount: Int) {
         var postType: String
         if self.isAnon {
             postType = "anon"
@@ -1321,7 +1336,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             
             let sendString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&postID=\(self.postID)&postType=\(postType)&postContent=\(postContent)&socialMedia=\(socialMedia)"
             sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
-            
+
             let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
                 (data, response, error) in
                 
@@ -1352,6 +1367,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                                 } else {
                                     self.logAnonPostShared(self.postID, socialMedia: socialMedia)
                                 }
+                                self.parentPost["shareCount"] = newShareCount
                                 self.writePostShared(self.postID, postType: postType)
                                 if let url = imageURL {
                                     if socialMedia == "Facebook" {
@@ -1484,8 +1500,8 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         }
         
         let post = self.setReply(-2, postContent: postContent)
-        self.replyPosts.insert(post, at: 0)
-        self.dropTableView.reloadRows(at: [IndexPath(row: 1, section: 0)], with: .fade)
+        self.replyPosts.insert(post, at: 1)
+        self.dropTableView.reloadData()
         
         self.textView.text = ""
         self.dismissKeyboard()
@@ -1516,7 +1532,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                 sendString.append("&locationTag=\(tags)")
             }
             sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
-            
+
             let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
                 (data, response, error) in
                 
@@ -1543,8 +1559,8 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                             if status == "success" {
                                 if let newPostID = parseJSON["postID"] as? Int {
                                     let post = self.setReply(newPostID, postContent: postContent)
-                                    self.replyPosts.remove(at: 0)
-                                    self.replyPosts.insert(post, at: 0)
+                                    self.replyPosts.remove(at: 1)
+                                    self.replyPosts.insert(post, at: 1)
                                     
                                     if self.isAnon {
                                         self.logAnonReplySent(newPostID)
@@ -1729,42 +1745,42 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                                                 }
                                                 self.parentPost = post
                                             }
-                                        } else {
-                                            
-                                            let postID = individualPost["postID"] as! Int
-                                            let userID = individualPost["userID"] as! Int
-                                            let userIDFIR = individualPost["firebaseID"] as! String
-                                            
-                                            var timestamp: String!
-                                            let time = individualPost["timestamp"] as! String
-                                            let timeEdited = individualPost["timestampEdited"] as! String
-                                            if time == timeEdited {
-                                                let timeFormatted = self.misc.formatTimestamp(time)
-                                                timestamp = timeFormatted
-                                            } else {
-                                                let timeEditedFormatted = self.misc.formatTimestamp(timeEdited)
-                                                timestamp = "edited \(timeEditedFormatted)"
-                                            }
-                                            
-                                            let postContent = individualPost["postContent"] as! String
-                                            
-                                            if let handle = individualPost["userHandle"] as? String  {
-                                                let key = individualPost["key"] as! String
-                                                let bucket = individualPost["bucket"] as! String
-                                                let picURL = URL(string: "https://\(bucket).s3.amazonaws.com/\(key)")!
-                                                if !self.urlArray.contains(picURL) {
-                                                    self.urlArray.append(picURL)
-                                                    SDWebImagePrefetcher.shared().prefetchURLs([picURL])
-                                                }
-                                                
-                                                let reply: [String:Any] = ["postID": postID, "userID": userID, "userIDFIR": userIDFIR, "userHandle": handle, "postContent": postContent, "timestamp": timestamp, "picURL": picURL]
-                                                replies.append(reply)
-                                                
-                                            } else {
-                                                let reply: [String:Any] = ["postID": postID, "userID": userID, "userIDFIR": userIDFIR, "postContent": postContent, "timestamp": timestamp]
-                                                replies.append(reply)
-                                            }
                                         }
+                                        
+                                        let postID = individualPost["postID"] as! Int
+                                        let userID = individualPost["userID"] as! Int
+                                        let userIDFIR = individualPost["firebaseID"] as! String
+                                        
+                                        var timestamp: String!
+                                        let time = individualPost["timestamp"] as! String
+                                        let timeEdited = individualPost["timestampEdited"] as! String
+                                        if time == timeEdited {
+                                            let timeFormatted = self.misc.formatTimestamp(time)
+                                            timestamp = timeFormatted
+                                        } else {
+                                            let timeEditedFormatted = self.misc.formatTimestamp(timeEdited)
+                                            timestamp = "edited \(timeEditedFormatted)"
+                                        }
+                                        
+                                        let postContent = individualPost["postContent"] as! String
+                                        
+                                        if let handle = individualPost["userHandle"] as? String  {
+                                            let key = individualPost["key"] as! String
+                                            let bucket = individualPost["bucket"] as! String
+                                            let picURL = URL(string: "https://\(bucket).s3.amazonaws.com/\(key)")!
+                                            if !self.urlArray.contains(picURL) {
+                                                self.urlArray.append(picURL)
+                                                SDWebImagePrefetcher.shared().prefetchURLs([picURL])
+                                            }
+                                            
+                                            let reply: [String:Any] = ["postID": postID, "userID": userID, "userIDFIR": userIDFIR, "userHandle": handle, "postContent": postContent, "timestamp": timestamp, "picURL": picURL]
+                                            replies.append(reply)
+                                            
+                                        } else {
+                                            let reply: [String:Any] = ["postID": postID, "userID": userID, "userIDFIR": userIDFIR, "postContent": postContent, "timestamp": timestamp]
+                                            replies.append(reply)
+                                        }
+                                        
                                     }
                                     
                                     if lastPostID != 0 {
@@ -1839,7 +1855,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                 let action: String = "delete"
                 
                 let sendString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&postID=\(postID)&action=\(action)&postType=\(postType)"
-                
+
                 sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
                 
                 let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
@@ -1858,7 +1874,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                             let status: String = parseJSON["status"] as! String
                             let message = parseJSON["message"] as! String
                             print("status: \(status), message: \(message)")
-                            
+
                             DispatchQueue.main.async(execute: {
                                 
                                 if status == "error" {
@@ -1958,7 +1974,6 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                                         self.replyPosts = []
                                         self.dropTableView.reloadData()
                                     } else {
-                                        self.replyPosts.remove(at: self.parentRow)
                                         let indexPath = IndexPath(row: self.parentRow, section: 0)
                                         self.dropTableView.reloadRows(at: [indexPath], with: .fade)
                                     }

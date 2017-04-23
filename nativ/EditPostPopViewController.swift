@@ -285,7 +285,7 @@ class EditPostPopViewController: UIViewController, UITextViewDelegate {
             sendRequest.httpMethod = "POST"
             
             let sendString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&postID=\(self.postID)&action=\(action)&postType=\(self.postType)&newContent=\(newContent!)"
-            
+
             sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
             
             let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
@@ -304,7 +304,7 @@ class EditPostPopViewController: UIViewController, UITextViewDelegate {
                         let status: String = parseJSON["status"] as! String
                         let message = parseJSON["message"] as! String
                         print("status: \(status), message: \(message)")
-                        
+
                         DispatchQueue.main.async(execute: {
                             
                             if status == "error" {

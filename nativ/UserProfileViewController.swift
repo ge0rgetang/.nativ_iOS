@@ -43,6 +43,8 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
     var userInfo: [String:Any] = [:]
     var userPosts:[[String:Any]] = []
     
+    let loadingImageArray: [UIImage] = [UIImage(named: "loading1")!, UIImage(named: "loading2")!, UIImage(named: "loading3")!, UIImage(named: "loading4")!, UIImage(named: "loading5")!, UIImage(named: "loading6")!, UIImage(named: "loading7")!, UIImage(named: "loading7")!]
+    
     let misc = Misc()
     var backButton = UIButton()
     var settingsButton = UIButton()
@@ -288,10 +290,10 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
             cell.userDescriptionLabel.text = self.userInfo["userDescription"] as? String
             
             if self.isFriend == "F" {
-                cell.friendRequestButton.setImage(UIImage(named: "addFriendSelected"), for: .normal)
-                cell.friendRequestButton.setImage(UIImage(named: "addFriendSelected"), for: .highlighted)
-                cell.friendRequestButton.setImage(UIImage(named: "addFriendSelected"), for: .selected)
-                cell.friendRequestButton.setImage(UIImage(named: "addFriendSelected"), for: .disabled)
+                cell.friendRequestButton.setImage(UIImage(named: "acceptedSelected"), for: .normal)
+                cell.friendRequestButton.setImage(UIImage(named: "acceptedSelected"), for: .highlighted)
+                cell.friendRequestButton.setImage(UIImage(named: "acceptedSelected"), for: .selected)
+                cell.friendRequestButton.setImage(UIImage(named: "acceptedSelected"), for: .disabled)
                 cell.friendRequestButton.isEnabled = false
                 cell.friendRequestLabel.text = "Friends ✓"
                 cell.friendRequestLabel.textColor = misc.nativColor
@@ -301,7 +303,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                 cell.friendRequestButton.setImage(UIImage(named: "addFriendSelected"), for: .selected)
                 cell.friendRequestButton.setImage(UIImage(named: "addFriendSelected"), for: .disabled)
                 cell.friendRequestButton.isEnabled = false
-                cell.friendRequestLabel.text = "Added ✓"
+                cell.friendRequestLabel.text = "Added"
                 cell.friendRequestLabel.textColor = misc.nativColor
             } else if self.isFriend == "R" {
                 cell.friendRequestButton.setImage(UIImage(named: "addFriendUnselected"), for: .normal)
@@ -310,7 +312,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                 cell.friendRequestButton.setImage(UIImage(named: "addFriendSelected"), for: .disabled)
                 cell.friendRequestButton.addTarget(self, action: #selector(self.sendFriendRequest), for: .touchUpInside)
                 cell.friendRequestButton.isEnabled = true
-                cell.friendRequestLabel.text = "On theirs; Add to your Flow too"
+                cell.friendRequestLabel.text = "Added you; Add them too"
                 cell.friendRequestLabel.textColor = misc.nativColor
             } else if self.isFriend == "BB" || self.isFriend == "B" {
                 cell.friendRequestButton.setImage(UIImage(named: "addFriendUnselected"), for: .normal)
@@ -338,7 +340,14 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
         let individualPost = self.userPosts[indexPath.row]
         if let imageURL = individualPost["imageURL"] as? URL {
             cell = tableView.dequeueReusableCell(withIdentifier: "pondUserImageCell", for: indexPath) as! PostTableViewCell
-            cell.postImageView.sd_setImage(with: imageURL)
+            let placeholder = UIImage.animatedImage(with: self.loadingImageArray, duration: 0.33)
+            let block: SDExternalCompletionBlock = { (image, error, cacheType, url) -> Void in
+                cell.postImageView.image = image
+                cell.postImageView.contentMode = .scaleAspectFill
+                cell.setNeedsLayout()
+            }
+            cell.postImageView.contentMode = .scaleAspectFit
+            cell.postImageView.sd_setImage(with: imageURL, placeholderImage: placeholder, options: .progressiveDownload, completed: block)
             let tapToViewImage = UITapGestureRecognizer(target: self, action: #selector(self.presentImage))
             cell.postImageView.addGestureRecognizer(tapToViewImage)
         } else {
@@ -377,7 +386,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
         cell.pointsLabel.text  = misc.setCount(pointsCount)
         
         let postContent = individualPost["postContent"] as! String
-        cell.postContentTextView.attributedText = misc.stringWithColoredTags(postContent, time: "default", fontSize: 18)
+        cell.postContentTextView.attributedText = misc.stringWithColoredTags(postContent, time: "default", fontSize: 18, timeSize: 18)
         
         cell.timestampLabel.text = individualPost["timestamp"] as? String
         

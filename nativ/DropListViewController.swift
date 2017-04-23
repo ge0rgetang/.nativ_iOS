@@ -103,7 +103,10 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
         
         self.logViewDropList()
         self.setNotifications()
-        misc.clearNotifications("pond")
+        let badge = UserDefaults.standard.integer(forKey: "badgeNumberDrop.nativ")
+        if badge > 0 {
+            misc.clearNotifications("pond")
+        }
         misc.resetBadgeForKey("badgeNumberDrop.nativ")
         misc.setSideMenuIndex(1)
         self.updateBadge()
@@ -193,7 +196,7 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
                 let replyTimestamp = reply["replyTimestamp"] as! String
                 
                 let contentString = "@\(replyHandle) \(replyTimestamp)" + "\r\n" + "\(replyContent)"
-                cell.recentReplyLabel.attributedText = misc.stringWithColoredTags(contentString, time: replyTimestamp, fontSize: 18)
+                cell.recentReplyLabel.attributedText = misc.stringWithColoredTags(contentString, time: replyTimestamp, fontSize: 18, timeSize: 14)
                 cell.recentReplyLabel.numberOfLines = 0
                 
                 let replyPicURL = reply["replyPicURL"] as! URL
@@ -215,7 +218,7 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
             
             let handle = individualPost["userHandle"] as! String
             let string = "@\(handle) \(timestamp)" + "\r\n" + "\(postContent)"
-            cell.postContentTextView.attributedText = misc.stringWithColoredTags(string, time: timestamp, fontSize: 14)
+            cell.postContentTextView.attributedText = misc.stringWithColoredTags(string, time: timestamp, fontSize: 14, timeSize: 11)
             
         } else {
             if let reply = individualPost["reply"] as? [String:Any] {
@@ -224,14 +227,14 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
                 let replyTimestamp = reply["replyTimestamp"] as! String
                 
                 let contentString = "\(replyTimestamp)" + "\r\n" + "\(replyContent)"
-                cell.recentReplyLabel.attributedText = misc.anonStringWithColoredTags(contentString, time: replyTimestamp, fontSize: 18)
+                cell.recentReplyLabel.attributedText = misc.anonStringWithColoredTags(contentString, time: replyTimestamp, fontSize: 18, timeSize: 14)
                 cell.recentReplyLabel.numberOfLines = 0
             } else {
                 cell = tableView.dequeueReusableCell(withIdentifier: "anonParentNoReplyCell", for: indexPath) as! PostTableViewCell
             }
             
             let string = "\(timestamp)" + "\r\n" + "\(postContent)"
-            cell.postContentTextView.attributedText = misc.anonStringWithColoredTags(string, time:timestamp, fontSize: 14)
+            cell.postContentTextView.attributedText = misc.anonStringWithColoredTags(string, time:timestamp, fontSize: 14, timeSize: 11)
         }
         
         cell.whiteView.backgroundColor = UIColor.white
@@ -371,6 +374,7 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
     func editPondContent(_ postContent: String, timestamp: String) {
         self.dropList[self.parentRow]["postContent"] = postContent
         self.dropList[self.parentRow]["timestamp"] = "edited \(timestamp)"
+        self.dropListTableView.reloadRows(at: [IndexPath(row: self.parentRow, section: 0)], with: .none)
     }
     
     func deletePondParent() {
@@ -379,15 +383,18 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
         } else {
             self.dropList.remove(at: self.parentRow)
         }
+        self.dropListTableView.reloadData()
     }
     
     func updatePondReplyCount(_ replyCount: Int) {
         self.dropList[self.parentRow]["replyCount"] = replyCount
+        self.dropListTableView.reloadRows(at: [IndexPath(row: self.parentRow, section: 0)], with: .none)
     }
     
     func updatePondPointCount(_ pointsCount: Int) {
         self.dropList[self.parentRow]["pointsCount"] = pointsCount
         self.dropList[self.parentRow]["didIVote"] = "yes"
+        self.dropListTableView.reloadRows(at: [IndexPath(row: self.parentRow, section: 0)], with: .none)
     }
     
     // MARK: - ScrollView

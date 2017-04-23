@@ -338,7 +338,9 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
     }
     
     func swipeRight() {
-        NotificationCenter.default.post(name: Notification.Name(rawValue: "turnToUserProfile"), object: nil)
+        if self.isFriend == "F" {
+            NotificationCenter.default.post(name: Notification.Name(rawValue: "turnToUserProfile"), object: nil)
+        }
     }
     
     // MARK: - TextView

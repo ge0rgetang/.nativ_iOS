@@ -330,27 +330,59 @@ class ImagePostViewController: UIViewController, UIImagePickerControllerDelegate
     
     // MARK: - Firebase
     
-    func writePostSent (_ postID: Int, postContent: String, tags: [String], imageURL: URL) {
+    func writePostSent (_ postID: Int, postContent: String, tags: [String], imageURLString: String) {
         if self.segment == "pond" {
+            let friendRef = self.ref.child("friendList").child("friends")
+            var userIDFIRArray: [String] = []
+            friendRef.observeSingleEvent(of: .value, with: { (snapshot) -> Void in
+                if let friendArray = snapshot.value as? [[String:Any]] {
+                    for friend in friendArray {
+                        if let key = friend.keys.first {
+                            userIDFIRArray.append(key)
+                        }
+                    }
+                }
+            })
+            for userIDFIR in userIDFIRArray {
+                let friendRef = self.ref.child("users").child(userIDFIR).child("lastFriendPost")
+                friendRef.setValue(postID)
+            }
+
             let pondRef = self.ref.child("posts").child("\(postID)")
             pondRef.child("longitude").setValue(self.longitude)
             pondRef.child("latitude").setValue(self.latitude)
             pondRef.child("points").setValue(0)
             pondRef.child("tags").setValue(tags)
-            pondRef.child("parent").setValue(["userID": self.myID, "userIDFIR": self.myIDFIR, "postContent": postContent, "timestamp": misc.getTimestamp("mine"), "shareCount": 0, "imageURL": imageURL])
+            pondRef.child("parent").setValue(["userID": self.myID, "userIDFIR": self.myIDFIR, "postContent": postContent, "timestamp": misc.getTimestamp("mine"), "shareCount": 0, "imageURLString": imageURLString])
             
             let myPondRef = self.ref.child("users").child(self.myIDFIR).child("posts").child("\(postID)")
             myPondRef.setValue(["userID": self.myID, "userIDFIR": self.myIDFIR, "postContent": postContent, "timestamp": misc.getTimestamp("mine"), "shareCount": 0])
+            
+            let locationRef = self.ref.child("locationTags")
+            for tag in tags {
+                let tagRef = locationRef.child(tag).child("\(postID)_pond")
+                tagRef.child("longitude").setValue(longitude)
+                tagRef.child("latitude").setValue(latitude)
+                tagRef.child("postInfo").setValue(["userID": self.myID, "userIDFIR": self.myIDFIR, "postContent": postContent, "timestamp": misc.getTimestamp("mine"), "imageURLString": imageURLString])
+            }
         } else {
             let anonRef = self.ref.child("anonPosts").child("\(postID)")
             anonRef.child("longitude").setValue(self.longitude)
             anonRef.child("latitude").setValue(self.latitude)
             anonRef.child("points").setValue(0)
             anonRef.child("tags").setValue(tags)
-            anonRef.child("parent").setValue(["userID": self.myID, "userIDFIR": self.myIDFIR, "postContent": postContent, "timestamp": misc.getTimestamp("mine"), "shareCount": 0, "imageURL": imageURL])
+            anonRef.child("parent").setValue(["userID": self.myID, "userIDFIR": self.myIDFIR, "postContent": postContent, "timestamp": misc.getTimestamp("mine"), "shareCount": 0, "imageURLString": imageURLString])
             
             let myAnonRef = self.ref.child("users").child(self.myIDFIR).child("anonPosts").child("\(postID)")
             myAnonRef.setValue(["userID": self.myID, "userIDFIR": self.myIDFIR, "postContent": postContent, "timestamp": misc.getTimestamp("mine"), "shareCount": 0])
+            
+            let locationRef = self.ref.child("locationTags")
+            for tag in tags {
+                let tagRef = locationRef.child(tag).child("\(postID)_pond")
+                tagRef.child("longitude").setValue(longitude)
+                tagRef.child("latitude").setValue(latitude)
+                tagRef.child("postInfo").setValue(["userID": self.myID, "userIDFIR": self.myIDFIR, "postContent": postContent, "timestamp": misc.getTimestamp("mine"), "imageURLString": imageURLString])
+            }
         }
     }
     
@@ -396,9 +428,9 @@ class ImagePostViewController: UIViewController, UIImagePickerControllerDelegate
         
         var scaleFactor: CGFloat!
         if sourceWidth > sourceHeight {
-            scaleFactor = 750/sourceWidth
+            scaleFactor = 500/sourceWidth
         } else {
-            scaleFactor = 750/sourceHeight
+            scaleFactor = 500/sourceHeight
         }
         
         let newWidth = scaleFactor*sourceWidth
@@ -506,7 +538,6 @@ class ImagePostViewController: UIViewController, UIImagePickerControllerDelegate
             if !tags.isEmpty {
                 sendString.append("&tags=\(tags)")
             }
-            
             sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
             
             let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
@@ -525,7 +556,7 @@ class ImagePostViewController: UIViewController, UIImagePickerControllerDelegate
                         let status: String = parseJSON["status"] as! String
                         let message = parseJSON["message"] as! String
                         print("status: \(status), message: \(message)")
-                        
+
                         DispatchQueue.main.async(execute: {
                             if status == "error" {
                                 self.displayAlert("Oops", alertMessage: "Sorry, we messed up. Your post has not been sent. Please report the bug by going to the report section in the menu if this persists.")
@@ -549,7 +580,8 @@ class ImagePostViewController: UIViewController, UIImagePickerControllerDelegate
                                         }
                                         self.textView.text = ""
                                         let imageURL = URL(string: "https://\(imageBucket).s3.amazonaws.com/\(imageKey)")!
-                                        self.writePostSent(newPostID, postContent: postContent, tags: tags, imageURL: imageURL)
+                                        let urlString: String = "https://\(imageBucket).s3.amazonaws.com/\(imageKey)"
+                                        self.writePostSent(newPostID, postContent: postContent, tags: tags, imageURLString: urlString)
                                         SDWebImagePrefetcher.shared().prefetchURLs([imageURL])
                                         self.unwindToHome()
                                     }

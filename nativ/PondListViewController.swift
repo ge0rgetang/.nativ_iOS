@@ -79,7 +79,8 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
     var trendingPosts: [[String:Any]] = []
     var tagsToRemove: [String] = []
     var friendPosts: [[String:Any]] = []
-
+    
+    let loadingImageArray: [UIImage] = [UIImage(named: "loading1")!, UIImage(named: "loading2")!, UIImage(named: "loading3")!, UIImage(named: "loading4")!, UIImage(named: "loading5")!, UIImage(named: "loading6")!, UIImage(named: "loading7")!, UIImage(named: "loading7")!]
     
     let misc = Misc()
     var activityView = UIView()
@@ -292,6 +293,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        self.checkAuthorizationStatus()
         self.pondListTableView.reloadData()
     }
     
@@ -475,9 +477,14 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
             case "pond", "friend":
                 if let imageURL = individualPost["imageURL"] as? URL {
                     cell = tableView.dequeueReusableCell(withIdentifier: "pondListImageCell", for: indexPath) as! PostTableViewCell
-                    cell.postImageView.sd_setImage(with: imageURL, completed: { (image, error, cacheType, url) in
-                        cell.layoutIfNeeded()
-                    })
+                    let placeholder = UIImage.animatedImage(with: self.loadingImageArray, duration: 0.33)
+                    let block: SDExternalCompletionBlock = { (image, error, cacheType, url) -> Void in
+                        cell.postImageView.image = image
+                        cell.postImageView.contentMode = .scaleAspectFill
+                        cell.setNeedsLayout()
+                    }
+                    cell.postImageView.contentMode = .scaleAspectFit
+                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: placeholder, options: .progressiveDownload, completed: block)
                     let tapToViewImage = UITapGestureRecognizer(target: self, action: #selector(self.presentImage))
                     cell.postImageView.addGestureRecognizer(tapToViewImage)
                 } else {
@@ -486,9 +493,14 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
             case "anon":
                 if let imageURL = individualPost["imageURL"] as? URL {
                     cell = tableView.dequeueReusableCell(withIdentifier: "anonListImageCell", for: indexPath) as! PostTableViewCell
-                    cell.postImageView.sd_setImage(with: imageURL, completed: { (image, error, cacheType, url) in
-                        cell.layoutIfNeeded()
-                    })
+                    let placeholder = UIImage.animatedImage(with: self.loadingImageArray, duration: 0.33)
+                    let block: SDExternalCompletionBlock = { (image, error, cacheType, url) -> Void in
+                        cell.postImageView.image = image
+                        cell.postImageView.contentMode = .scaleAspectFill
+                        cell.setNeedsLayout()
+                    }
+                    cell.postImageView.contentMode = .scaleAspectFit
+                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: placeholder, options: .progressiveDownload, completed: block)
                     let tapToViewImage = UITapGestureRecognizer(target: self, action: #selector(self.presentImage))
                     cell.postImageView.addGestureRecognizer(tapToViewImage)
                 } else {
@@ -501,9 +513,14 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                     } else {
                         cell = tableView.dequeueReusableCell(withIdentifier: "anonListImageCell", for: indexPath) as! PostTableViewCell
                     }
-                    cell.postImageView.sd_setImage(with: imageURL, completed: { (image, error, cacheType, url) in
-                        cell.layoutIfNeeded()
-                    })
+                    let placeholder = UIImage.animatedImage(with: self.loadingImageArray, duration: 0.33)
+                    let block: SDExternalCompletionBlock = { (image, error, cacheType, url) -> Void in
+                        cell.postImageView.image = image
+                        cell.postImageView.contentMode = .scaleAspectFill
+                        cell.setNeedsLayout()
+                    }
+                    cell.postImageView.contentMode = .scaleAspectFit
+                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: placeholder, options: .progressiveDownload, completed: block)
                     let tapToViewImage = UITapGestureRecognizer(target: self, action: #selector(self.presentImage))
                     cell.postImageView.addGestureRecognizer(tapToViewImage)
                 } else {
@@ -546,7 +563,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                 cell.userPicImageView.sd_setImage(with: picURL)
                 cell.userNameLabel.text = individualPost["userName"] as? String
                 cell.userHandleLabel.text = "@\(handle)"
-                cell.postContentTextView.attributedText = misc.stringWithColoredTags(postContent, time: "default", fontSize: 18)
+                cell.postContentTextView.attributedText = misc.stringWithColoredTags(postContent, time: "default", fontSize: 18, timeSize: 12)
 
                 if userID != self.myID && self.myID > 0 {
                     let tapPicToViewUser = UITapGestureRecognizer(target: self, action: #selector(self.presentUserProfile))
@@ -557,7 +574,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                     cell.userHandleLabel.addGestureRecognizer(tapHandleToViewUser)
                 }
             } else {
-                cell.postContentTextView.attributedText = misc.anonStringWithColoredTags(postContent, time: "default", fontSize: 18)
+                cell.postContentTextView.attributedText = misc.anonStringWithColoredTags(postContent, time: "default", fontSize: 18, timeSize: 12)
             }
             
             let tapWord = UITapGestureRecognizer(target: self, action: #selector(self.textViewTapped))
@@ -877,6 +894,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         default:
             return
         }
+        self.pondListTableView.reloadRows(at: [IndexPath(row: self.parentRow, section: 0)], with: .none)
     }
     
     func deletePondParent() {
@@ -914,6 +932,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         default:
             return
         }
+        self.pondListTableView.reloadData()
     }
     
     func updatePondReplyCount(_ replyCount: Int) {
@@ -931,6 +950,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         default:
             return
         }
+        self.pondListTableView.reloadRows(at: [IndexPath(row: self.parentRow, section: 0)], with: .none)
     }
     
     func updatePondPointCount(_ pointsCount: Int) {
@@ -953,6 +973,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         default:
             return
         }
+        self.pondListTableView.reloadRows(at: [IndexPath(row: self.parentRow, section: 0)], with: .none)
     }
     
     // MARK: - SendImagePostProtocol
@@ -967,6 +988,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         default:
             return
         }
+        self.pondListTableView.reloadData()
     }
     
     // MARK: - Location
@@ -1003,7 +1025,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
     
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         if status == .authorizedWhenInUse || status == .authorizedAlways {
-            self.locationTextField.text = self.locationText
+            self.locationTextField.text = "here"
             self.locationManager.startUpdatingLocation()
         } else {
             self.locationTextField.text = "Berkeley, CA"
@@ -2337,23 +2359,9 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
             cell.shareCountLabel.text = "\(newShareCount)"
             
             if let imageURL = individualPost["imageURL"] as? URL {
-                self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Facebook", imageURL: imageURL, orView: nil)
+                self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Facebook", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
             } else {
-                self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Facebook", imageURL: nil, orView: cell.whiteView)
-            }
-            switch self.segment {
-            case "pond":
-                self.pondPosts[indexPath.row]["shareCount"] = newShareCount
-            case "anon":
-                self.anonPosts[indexPath.row]["shareCount"] = newShareCount
-            case "hot":
-                self.hotPosts[indexPath.row]["shareCount"] = newShareCount
-            case "trending":
-                self.trendingPosts[indexPath.row]["shareCount"] = newShareCount
-            case "friend":
-                self.friendPosts[indexPath.row]["shareCount"] = newShareCount
-            default:
-                return
+                self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Facebook", imageURL: nil, orView: cell.whiteView, newShareCount: newShareCount)
             }
         })
         alertController.addAction(shareFBAction)
@@ -2363,23 +2371,9 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
             cell.shareCountLabel.text = "\(newShareCount)"
             
             if let imageURL = individualPost["imageURL"] as? URL {
-                self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Twitter", imageURL: imageURL, orView: nil)
+                self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Twitter", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
             } else {
-                self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Twitter", imageURL: nil, orView: cell.whiteView)
-            }
-            switch self.segment {
-            case "pond":
-                self.pondPosts[indexPath.row]["shareCount"] = newShareCount
-            case "anon":
-                self.anonPosts[indexPath.row]["shareCount"] = newShareCount
-            case "hot":
-                self.hotPosts[indexPath.row]["shareCount"] = newShareCount
-            case "trending":
-                self.trendingPosts[indexPath.row]["shareCount"] = newShareCount
-            case "friend":
-                self.friendPosts[indexPath.row]["shareCount"] = newShareCount
-            default:
-                return
+                self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Twitter", imageURL: nil, orView: cell.whiteView, newShareCount: newShareCount)
             }
         })
         alertController.addAction(shareTwitterAction)
@@ -2395,7 +2389,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         })
     }
     
-    func sharePost(_ postID: Int, postType: String, postContent: String, socialMedia: String, imageURL: URL?, orView: UIView?) {
+    func sharePost(_ postID: Int, postType: String, postContent: String, socialMedia: String, imageURL: URL?, orView: UIView?, newShareCount: Int) {
         let token = misc.generateToken(16, firebaseID: self.myIDFIR)
         let iv = token.first!
         let tokenString = token.last!
@@ -2449,6 +2443,20 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                                     } else {
                                         self.sharePhotoTwitter(url)
                                     }
+                                }
+                                switch self.segment {
+                                case "pond":
+                                    self.pondPosts[self.parentRow]["shareCount"] = newShareCount
+                                case "anon":
+                                    self.anonPosts[self.parentRow]["shareCount"] = newShareCount
+                                case "hot":
+                                    self.hotPosts[self.parentRow]["shareCount"] = newShareCount
+                                case "trending":
+                                    self.trendingPosts[self.parentRow]["shareCount"] = newShareCount
+                                case "friend":
+                                    self.friendPosts[self.parentRow]["shareCount"] = newShareCount
+                                default:
+                                    return
                                 }
                                 if let view = orView {
                                     if socialMedia == "Facebook" {
@@ -2803,7 +2811,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                         let status: String = parseJSON["status"] as! String
                         let message = parseJSON["message"] as! String
                         print("status: \(status), message: \(message)")
-                        
+
                         DispatchQueue.main.async(execute: {
                             self.activityView.removeFromSuperview()
                             

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="12118" systemVersion="16E195" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="12120" systemVersion="16E195" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12086"/>
-        <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12088"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -22,18 +22,20 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="launchScreenIcon" translatesAutoresizingMaskIntoConstraints="NO" id="K7F-an-kTC">
-                                <rect key="frame" x="0.0" y="145" width="377" height="377"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" secondItem="K7F-an-kTC" secondAttribute="height" multiplier="1:1" id="LWc-kx-of9"/>
-                                </constraints>
-                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text=".nativ" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="cXg-Iz-qPD">
+                                <rect key="frame" x="16" y="262.5" width="343" height="92"/>
+                                <color key="tintColor" red="0.27450980390000002" green="0.54901960780000003" blue="0.45098039220000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="77"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" red="0.27450980392156865" green="0.5490196078431373" blue="0.45098039215686275" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="K7F-an-kTC" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="94E-Hd-GEs"/>
-                            <constraint firstItem="K7F-an-kTC" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="Dvw-tC-pqR"/>
-                            <constraint firstAttribute="trailing" secondItem="K7F-an-kTC" secondAttribute="trailing" constant="-2" id="LPF-Hr-s5J"/>
+                            <constraint firstItem="cXg-Iz-qPD" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="J3M-xt-TpC"/>
+                            <constraint firstItem="cXg-Iz-qPD" firstAttribute="trailing" secondItem="Ze5-6b-2t3" secondAttribute="trailingMargin" id="svE-Mv-C1A"/>
+                            <constraint firstItem="cXg-Iz-qPD" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leadingMargin" id="vo2-fO-WpA"/>
+                            <constraint firstItem="cXg-Iz-qPD" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" constant="-25" id="yQq-hd-bx8"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -42,7 +44,4 @@
             <point key="canvasLocation" x="52" y="374.66266866566718"/>
         </scene>
     </scenes>
-    <resources>
-        <image name="launchScreenIcon" width="512" height="512"/>
-    </resources>
 </document>

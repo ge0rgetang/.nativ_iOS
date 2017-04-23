@@ -65,7 +65,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         self.window?.tintColor = nativColor
         
         SDWebImageDownloader.shared().maxConcurrentDownloads = 10
-        SDWebImagePrefetcher.shared().maxConcurrentDownloads = 10
         
         return true
     }
@@ -205,27 +204,62 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
     }
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any]) {
-        let aps: NSDictionary = userInfo["aps"] as! NSDictionary
-        let badgeNumber = aps["badge"] as! Int
-        UserDefaults.standard.set(badgeNumber, forKey: "badgeNumber.nativ")
-        
-        let subject = aps["subject"] as! String
-        if subject == "pond" {
-            let oldBadge = UserDefaults.standard.integer(forKey: "badgeNumberDrop.nativ")
-            let newBadge = oldBadge + 1
-            UserDefaults.standard.set(newBadge, forKey: "badgeNumberDrop.nativ")
-        } else if subject == "friendList" || subject == "friendRequest" || subject == "chat" {
-            let oldBadge = UserDefaults.standard.integer(forKey: "badgeNumberFriendList.nativ")
-            let newBadge = oldBadge + 1
-            UserDefaults.standard.set(newBadge, forKey: "badgeNumberFriendList.nativ")
-        } else {
-            let oldBadge = UserDefaults.standard.integer(forKey: "badgeNumberNotifications.nativ")
-            let newBadge = oldBadge + 1
-            UserDefaults.standard.set(newBadge, forKey: "badgeNumberNotifications.nativ")
+        if let aps: NSDictionary = userInfo["aps"] as? NSDictionary {
+        print(userInfo)
+            let badgeNumber = aps["badge"] as! Int
+            UserDefaults.standard.set(badgeNumber, forKey: "badgeNumber.nativ")
+            UIApplication.shared.applicationIconBadgeNumber = badgeNumber
+            UserDefaults.standard.synchronize()
         }
-        UserDefaults.standard.synchronize()
+
+        if let category = userInfo["category"] as? String {
+            switch category {
+            case "pond", "anon":
+                let oldBadge = UserDefaults.standard.integer(forKey: "badgeNumberDrop.nativ")
+                let newBadge = oldBadge + 1
+                UserDefaults.standard.set(newBadge, forKey: "badgeNumberDrop.nativ")
+                UserDefaults.standard.synchronize()
+                if application.applicationState == .inactive || application.applicationState == .background {
+                    NotificationCenter.default.post(name: Notification.Name(rawValue: "turnToDropList"), object: nil)
+                }
+            case "chat":
+                let oldBadge = UserDefaults.standard.integer(forKey: "badgeNumberChat.nativ")
+                let newBadge = oldBadge + 1
+                UserDefaults.standard.set(newBadge, forKey: "badgeNumberChat.nativ")
+                UserDefaults.standard.set("chat", forKey: "friendList.nativ")
+                UserDefaults.standard.synchronize()
+                if application.applicationState == .inactive || application.applicationState == .background {
+                    NotificationCenter.default.post(name: Notification.Name(rawValue: "turnToFriendList"), object: nil)
+                }
+            case "accepted":
+                let oldBadge = UserDefaults.standard.integer(forKey: "badgeNumberAccepted.nativ")
+                let newBadge = oldBadge + 1
+                UserDefaults.standard.set(newBadge, forKey: "badgeNumberAccepted.nativ")
+                UserDefaults.standard.set("addedMe", forKey: "friendList.nativ")
+                UserDefaults.standard.synchronize()
+                if application.applicationState == .inactive || application.applicationState == .background {
+                    NotificationCenter.default.post(name: Notification.Name(rawValue: "turnToFriendList"), object: nil)
+                }
+            case "friendRequest":
+                let oldBadge = UserDefaults.standard.integer(forKey: "badgeNumberAddedMe.nativ")
+                let newBadge = oldBadge + 1
+                UserDefaults.standard.set(newBadge, forKey: "badgeNumberAddedMe.nativ")
+                UserDefaults.standard.set("friends", forKey: "friendList.nativ")
+                UserDefaults.standard.synchronize()
+                if application.applicationState == .inactive || application.applicationState == .background {
+                    NotificationCenter.default.post(name: Notification.Name(rawValue: "turnToFriendList"), object: nil)
+                }
+            default:
+                let oldBadge = UserDefaults.standard.integer(forKey: "badgeNumberNotifications.nativ")
+                let newBadge = oldBadge + 1
+                UserDefaults.standard.set(newBadge, forKey: "badgeNumberNotifications.nativ")
+                UserDefaults.standard.synchronize()
+                if application.applicationState == .inactive || application.applicationState == .background {
+                    NotificationCenter.default.post(name: Notification.Name(rawValue: "turnToNotifications"), object: nil)
+                }
+            }
+        }
         
-        UIApplication.shared.applicationIconBadgeNumber = badgeNumber
         NotificationCenter.default.post(name: Notification.Name(rawValue: "didReceiveNotification"), object: nil)
     }
     

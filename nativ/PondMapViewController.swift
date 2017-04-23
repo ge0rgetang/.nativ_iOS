@@ -639,7 +639,7 @@ class PondMapViewController: UIViewController, CLLocationManagerDelegate, MKMapV
     
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         if status == .authorizedWhenInUse || status == .authorizedAlways {
-            self.locationTextField.text = self.locationText
+            self.locationTextField.text = "here"
             self.locationManager.startUpdatingLocation()
         } else {
             self.locationTextField.text = "Berkeley, CA"

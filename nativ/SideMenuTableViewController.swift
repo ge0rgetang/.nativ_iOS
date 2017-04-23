@@ -343,8 +343,12 @@ class SideMenuTableViewController: UITableViewController, GIDSignInUIDelegate, F
     func setBadgeNumbers() {
         let dropBadge = UserDefaults.standard.integer(forKey: "badgeNumberDrop.nativ")
         self.dropBadge = dropBadge
-        let friendBadge = UserDefaults.standard.integer(forKey: "badgeNumberFriendList.nativ")
-        self.friendBadge = friendBadge
+        
+        let chatBadge = UserDefaults.standard.integer(forKey: "badgeNumberChat.nativ")
+        let acceptedBadge = UserDefaults.standard.integer(forKey: "badgeNumberAccepted.nativ")
+        let addedMeBadge = UserDefaults.standard.integer(forKey: "badgeNumberAddedMe.nativ")
+        self.friendBadge = chatBadge + acceptedBadge + addedMeBadge
+        
         let notificationsBadge =  UserDefaults.standard.integer(forKey: "badgeNumberNotifications.nativ")
         self.notificationsBadge = notificationsBadge
     }

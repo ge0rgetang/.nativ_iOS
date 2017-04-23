@@ -57,7 +57,7 @@ class AboutViewController: UIViewController, UIPopoverPresentationControllerDele
         self.termsButton.setTitle("View our Terms & Conditions", for: .normal)
         
         self.aboutLabel.numberOfLines = 0
-        self.aboutLabel.attributedText = misc.stringWithColoredTags(self.aboutText, time: "default", fontSize: 17)
+        self.aboutLabel.attributedText = misc.stringWithColoredTags(self.aboutText, time: "default", fontSize: 17, timeSize: 17)
         
         self.authorLabel.text = "-@ge0rgetang"
         
@@ -159,9 +159,11 @@ class AboutViewController: UIViewController, UIPopoverPresentationControllerDele
             "Notification (flipped across y-axis), by Dinosoft Labs" + "\r\n\n" +
             "Drops, by Drishya" + "\r\n\n" +
             "Fire, by HLD" + "\r\n\n" +
+            "Loading (rotated over several angles), by Hopkins" + "\r\n\n" +
             "Chat, by i cons" + "\r\n\n" +
             "Eye Mask, by Jems Mayor" + "\r\n\n" +
             "Reply (flipped across y-axis), by joe pictos" + "\r\n\n" +
+            "Accept, by Kiran Joseph" + "\r\n\n" +
             "List, by Laurent Sutterlity" + "\r\n\n" +
             "Add Person, Mail, by MFRA" + "\r\n\n" +
             "My Location, by Miguel C Balandrano" + "\r\n\n" +

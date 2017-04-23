@@ -219,7 +219,7 @@ class Misc: NSObject {
         return attributedString
     }
     
-    func stringWithColoredTags(_ string: String, time: String, fontSize: CGFloat) -> NSMutableAttributedString {
+    func stringWithColoredTags(_ string: String, time: String, fontSize: CGFloat, timeSize: CGFloat) -> NSMutableAttributedString {
         let stringArray = string.components(separatedBy: " ")
         let attributedString: NSMutableAttributedString = NSMutableAttributedString(string: string)
         
@@ -236,18 +236,19 @@ class Misc: NSObject {
             attributedString.addAttributes(tapAttribute, range: range)
         }
         
+        let entireRange = (string as NSString).range(of: string)
+        attributedString.addAttributes([NSFontAttributeName: UIFont.systemFont(ofSize: fontSize)], range: entireRange)
+        
         if time != "default" {
             let range = (string as NSString).range(of: time)
             attributedString.addAttribute(NSForegroundColorAttributeName, value: UIColor.lightGray, range: range)
+            attributedString.addAttribute(NSFontAttributeName, value: UIFont.systemFont(ofSize: timeSize), range: range)
         }
-        
-        let entireRange = (string as NSString).range(of: string)
-        attributedString.addAttributes([NSFontAttributeName: UIFont.systemFont(ofSize: fontSize)], range: entireRange)
         
         return attributedString
     }
     
-    func anonStringWithColoredTags(_ string: String, time: String, fontSize: CGFloat) -> NSMutableAttributedString {
+    func anonStringWithColoredTags(_ string: String, time: String, fontSize: CGFloat, timeSize: CGFloat) -> NSMutableAttributedString {
         let stringArray = string.components(separatedBy: " ")
         let attributedString: NSMutableAttributedString = NSMutableAttributedString(string: string)
         
@@ -264,13 +265,14 @@ class Misc: NSObject {
             attributedString.addAttributes(tapAttribute, range: range)
         }
         
+        let entireRange = (string as NSString).range(of: string)
+        attributedString.addAttributes([NSFontAttributeName: UIFont.systemFont(ofSize: fontSize)], range: entireRange)
+        
         if time != "default" {
             let range = (string as NSString).range(of: time)
             attributedString.addAttribute(NSForegroundColorAttributeName, value: UIColor.lightGray, range: range)
+            attributedString.addAttribute(NSFontAttributeName, value: UIFont.systemFont(ofSize: timeSize), range: range)
         }
-        
-        let entireRange = (string as NSString).range(of: string)
-        attributedString.addAttributes([NSFontAttributeName: UIFont.systemFont(ofSize: fontSize)], range: entireRange)
         
         return attributedString
     }

@@ -189,7 +189,7 @@ class NotificationsViewController: UIViewController, UITableViewDelegate, UITabl
             cell.notificationLabel.text = content
         } else {
             cell.notificationLabel.textColor = .black
-            let attributedString = misc.stringWithColoredTags(content, time: "default", fontSize: 18)
+            let attributedString = misc.stringWithColoredTags(content, time: "default", fontSize: 18, timeSize: 18)
             cell.notificationLabel.attributedText = attributedString
         }
         cell.timestampLabel.text = individualNotification["timestamp"] as? String
@@ -234,7 +234,14 @@ class NotificationsViewController: UIViewController, UITableViewDelegate, UITabl
                 }
                 self.performSegue(withIdentifier: "fromNotificationsToDrop", sender: self)
                 
-            case "friendRequest":
+            case "friendRequest", "accepted":
+                if type == "friendRequest" {
+                    UserDefaults.standard.set("addedMe", forKey: "friendList.nativ")
+                    UserDefaults.standard.synchronize()
+                } else {
+                    UserDefaults.standard.set("friends", forKey: "friendList.nativ")
+                    UserDefaults.standard.synchronize()
+                }
                 NotificationCenter.default.post(name: Notification.Name(rawValue: "turnToFriendList"), object: nil)
                 
             case "chat":
@@ -505,7 +512,7 @@ class NotificationsViewController: UIViewController, UITableViewDelegate, UITabl
             
             let sendString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&lastNotificationID=\(lastNotificationID)"
             sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
-            
+
             let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
                 (data, response, error) in
                 

@@ -355,8 +355,8 @@ class LoginViewController: UIViewController, UITextFieldDelegate, UIPopoverPrese
                                 UserDefaults.standard.synchronize()
                                 self.misc.clearWebImageCache()
                                 self.logLogInFromLogin(myID)
-                                _ = self.navigationController?.popViewController(animated: false)
                                 NotificationCenter.default.post(name: Notification.Name(rawValue: "signedIn"), object: nil)
+                                NotificationCenter.default.post(name: Notification.Name(rawValue: "turnToMyProfile"), object: nil)
                             }
                             
                         })

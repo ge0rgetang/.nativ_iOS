@@ -150,8 +150,19 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
             self.writeInFriendList(true)
         }
         
-        misc.clearNotifications("friendList")
-        misc.resetBadgeForKey("badgeNumberFriendList.nativ")
+        if let section = UserDefaults.standard.string(forKey: "friendList.nativ") {
+            if section == "chat" {
+                self.segmentedControl.selectedSegmentIndex = 0
+            } else if section == "friends" {
+                self.segmentedControl.selectedSegmentIndex = 1
+            } else {
+                self.segmentedControl.selectedSegmentIndex = 2
+            }
+            UserDefaults.standard.removeObject(forKey: "friendList.nativ")
+            UserDefaults.standard.synchronize() 
+        }
+        
+        self.resetFriendBadge(self.segmentedControl.selectedSegmentIndex)
         misc.setSideMenuIndex(2)
         self.updateBadge()
     }
@@ -351,7 +362,7 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                 
             case 1:
                 let individualUser = self.friendsAddedTo[indexPath.row]
-                let cell = tableView.dequeueReusableCell(withIdentifier: "userListCell", for: indexPath) as! UserListTableViewCell
+                let cell = tableView.dequeueReusableCell(withIdentifier: "addedMeCell", for: indexPath) as! UserListTableViewCell
                 
                 cell.userNameLabel.text = individualUser["userName"] as? String
                 let userHandle = individualUser["userHandle"] as! String
@@ -362,6 +373,13 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                 cell.userPicImageView.sd_setImage(with: picURL)
                 let tapPicToViewUser = UITapGestureRecognizer(target: self, action: #selector(self.presentUserProfile))
                 cell.userPicImageView.addGestureRecognizer(tapPicToViewUser)
+                
+                let isFriend = individualUser["isFriend"] as! String
+                if isFriend == "F" {
+                    cell.addButton.setImage(UIImage(named: "acceptedSelected"), for: .normal)
+                } else {
+                    cell.addButton.setImage(UIImage(named: "addFriendSelected"), for: .normal)
+                }
                 
                 cell.whiteView.backgroundColor = UIColor.white
                 cell.whiteView.layer.masksToBounds = false
@@ -448,7 +466,7 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                 return cell
             }
             if segmentIndex == 2 {
-                cell.headerLabel.text = "Added You"
+                cell.headerLabel.text = "Added Me"
                 cell.headerLabel.textAlignment = .center
                 cell.headerLabel.sizeToFit()
                 return cell
@@ -668,6 +686,7 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
             return
         }
         
+        self.resetFriendBadge(sender.selectedSegmentIndex)
         self.friendListTableView.reloadData()
     }
     
@@ -685,10 +704,12 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                     self.segmentedControl.selectedSegmentIndex = 1
                     self.getFriendList()
                     self.logViewAdded()
+                    self.resetFriendBadge(1)
                 case 1:
                     self.segmentedControl.selectedSegmentIndex = 2
                     self.getFriendList()
                     self.logViewAddedMe()
+                    self.resetFriendBadge(2)
                 default:
                     return
                 }
@@ -712,10 +733,12 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                     self.segmentedControl.selectedSegmentIndex = 1
                     self.getFriendList()
                     self.logViewAddedMe()
+                    self.resetFriendBadge(1)
                 case 1:
                     self.segmentedControl.selectedSegmentIndex = 0
                     self.observeFriendList()
                     self.logViewChats()
+                    self.resetFriendBadge(0)
                 default:
                     return
                 }
@@ -780,6 +803,61 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
     }
     
     // MARK: - Notifications
+    
+    func setSegementedBadgeTitle() {
+        let chatBadge = UserDefaults.standard.integer(forKey: "badgeNumberChat.nativ")
+        let acceptedBadge = UserDefaults.standard.integer(forKey: "badgeNumberAccepted.nativ")
+        let addedMeBadge = UserDefaults.standard.integer(forKey: "badgeNumberAddedMe.nativ")
+        
+        if chatBadge > 0 {
+            let num = misc.setCount(chatBadge)
+            self.segmentedControl.setTitle("Chats (\(num))", forSegmentAt: 0)
+        } else {
+            self.segmentedControl.setTitle("Chats", forSegmentAt: 0)
+        }
+        
+        if acceptedBadge > 0 {
+            let num = misc.setCount(acceptedBadge)
+            self.segmentedControl.setTitle("Friends (\(num))", forSegmentAt: 1)
+        } else {
+            self.segmentedControl.setTitle("Friends", forSegmentAt: 1)
+        }
+        
+        if addedMeBadge > 0 {
+            let num = misc.setCount(addedMeBadge)
+            self.segmentedControl.setTitle("Added Me (\(num))", forSegmentAt: 2)
+        } else {
+            self.segmentedControl.setTitle("Added Me", forSegmentAt: 2)
+        }
+    }
+    
+    func resetFriendBadge(_ index: Int) {
+        let chatBadge = UserDefaults.standard.integer(forKey: "badgeNumberChat.nativ")
+        let acceptedBadge = UserDefaults.standard.integer(forKey: "badgeNumberAccepted.nativ")
+        let addedMeBadge = UserDefaults.standard.integer(forKey: "badgeNumberAddedMe.nativ")
+        
+        switch index {
+        case 0:
+            if chatBadge > 0 {
+                misc.resetBadgeForKey("badgeNumberChat.nativ")
+                misc.clearNotifications("chat")
+            }
+        case 1:
+            if acceptedBadge > 0 {
+                misc.resetBadgeForKey("badgeNumberAccepted.nativ")
+                misc.clearNotifications("accepted")
+            }
+        case 2:
+            if addedMeBadge > 0 {
+                misc.resetBadgeForKey("badgeNumberAddedMe.nativ")
+                misc.clearNotifications("friendRequest")
+            }
+        default:
+            return
+        }
+        
+        self.setSegementedBadgeTitle()
+    }
     
     func updateBadge() {
         let badge = UserDefaults.standard.integer(forKey: "badgeNumber.native")
@@ -1022,11 +1100,11 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
     }
     
     func writeAcceptAction(_ userIDFIR: String) {
-        self.ref.child("users").child(userIDFIR).child("friendList").child("added").child(myIDFIR).removeValue()
-        self.ref.child("users").child(self.myIDFIR).child("friendList").child("addedMe").child(userIDFIR).removeValue()
+        self.ref.child(userIDFIR).child("friendList").child("added").child(myIDFIR).removeValue()
+        self.ref.child(self.myIDFIR).child("friendList").child("addedMe").child(userIDFIR).removeValue()
         
-        self.ref.child("users").child(self.myIDFIR).child("friendList").child("friends").child(userIDFIR).setValue(true)
-        self.ref.child("users").child(userIDFIR).child("friendList").child("friends").child(self.myIDFIR).setValue(true)
+        self.ref.child(self.myIDFIR).child("friendList").child("friends").child(userIDFIR).setValue(true)
+        self.ref.child(userIDFIR).child("friendList").child("friends").child(self.myIDFIR).setValue(true)
     }
 
     
@@ -1295,7 +1373,7 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
             let getURL = URL(string: "https://dotnative.io/getFriendList")
             var getRequest = URLRequest(url: getURL!)
             getRequest.httpMethod = "POST"
-            
+
             let getString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&lastUserName=\(lastUserName)&size=\(size)"
             
             getRequest.httpBody = getString.data(using: String.Encoding.utf8)
@@ -1316,7 +1394,7 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                         let status: String = parseJSON["status"] as! String
                         let message = parseJSON["message"] as! String
                         print("status: \(status), message: \(message)")
-                        
+
                         DispatchQueue.main.async(execute: {
                             self.activityView.removeFromSuperview()
                             
