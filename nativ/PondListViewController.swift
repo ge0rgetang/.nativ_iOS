@@ -79,6 +79,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
     var trendingPosts: [[String:Any]] = []
     var tagsToRemove: [String] = []
     var friendPosts: [[String:Any]] = []
+    var lastContentOffset: CGFloat = 0
     
     let loadingImageArray: [UIImage] = [UIImage(named: "loading1")!, UIImage(named: "loading2")!, UIImage(named: "loading3")!, UIImage(named: "loading4")!, UIImage(named: "loading5")!, UIImage(named: "loading6")!, UIImage(named: "loading7")!, UIImage(named: "loading7")!]
     
@@ -1670,6 +1671,22 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         let frameHeight = scrollView.frame.size.height
         let contentHeight = scrollView.contentSize.height
         
+        var posts: [[String:Any]]
+        switch self.segment {
+        case "pond":
+            posts = self.pondPosts
+        case "anon":
+            posts = self.anonPosts
+        case "hot":
+            posts = self.hotPosts
+        case "trending":
+            posts = self.trendingPosts
+        case "friend":
+            posts = self.friendPosts
+        default:
+            return
+        }
+        
         if offset <= 420 {
             self.scrollToTopButton.removeFromSuperview()
         }
@@ -1680,27 +1697,46 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
             self.observePond()
         } else if offset == (contentHeight - frameHeight) {
             self.scrollPosition = "bottom"
-            var posts: [[String:Any]]
-            switch self.segment {
-            case "pond":
-                posts = self.pondPosts
-            case "anon":
-                posts = self.anonPosts
-            case "hot":
-                posts = self.hotPosts
-            case "trending":
-                posts = self.trendingPosts
-            case "friend":
-                posts = self.friendPosts
-            default:
-                return
-            }
             if posts.count >= 46 {
                 self.getPondList()
             }
         } else {
             self.scrollPosition = "middle"
         }
+        
+        // prefetch images on scroll down
+        if !posts.isEmpty {
+            if self.lastContentOffset < scrollView.contentOffset.y {
+                let visibleCells = self.pondListTableView.visibleCells
+                if let lastCell = visibleCells.last {
+                    let lastIndexPath = self.pondListTableView.indexPath(for: lastCell)
+                    let lastRow = lastIndexPath!.row
+                    var nextLastRow = lastRow + 5
+                    
+                    let maxCount = posts.count
+                    if nextLastRow > (maxCount - 1) {
+                        nextLastRow = maxCount - 1
+                    }
+                    
+                    if nextLastRow > lastRow {
+                        nextLastRow = lastRow
+                    }
+                    
+                    var urlsToPrefetch: [URL] = []
+                    for index in lastRow...nextLastRow {
+                        let post = posts[index]
+                        if let picURL = post["picURL"] as? URL {
+                            urlsToPrefetch.append(picURL)
+                        }
+                        if let imageURL = post["imageURL"] as? URL {
+                            urlsToPrefetch.append(imageURL)
+                        }
+                    }
+                    SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch)
+                }
+            }
+        }
+        self.lastContentOffset = scrollView.contentOffset.y
     }
     
     // MARK: - Keyboard
@@ -1834,6 +1870,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
     }
     
     func scrollToTop() {
+        self.lastContentOffset = 0
         self.pondListTableView.setContentOffset(.zero, animated: false)
         self.scrollToTopButton.removeFromSuperview()
     }
@@ -2323,77 +2360,79 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
     func presentSharePostSheet(sender: UITapGestureRecognizer) {
         self.removeObserverForPond()
         
-        let position = sender.location(in: self.pondListTableView)
-        let indexPath: IndexPath! = self.pondListTableView.indexPathForRow(at: position)
-        self.parentRow = indexPath.row
-        
-        let cell = self.pondListTableView.cellForRow(at: indexPath) as! PostTableViewCell
-        cell.sharePicImageView.isHighlighted = true
-        
-        var individualPost: [String:Any]
-        switch self.segment {
-        case "pond":
-            individualPost = self.pondPosts[indexPath.row]
-        case "anon":
-            individualPost = self.anonPosts[indexPath.row]
-        case "hot":
-            individualPost = self.hotPosts[indexPath.row]
-        case "trending":
-            individualPost = self.trendingPosts[indexPath.row]
-        case "friend":
-            individualPost = self.friendPosts[indexPath.row]
-        default:
-            return
-        }
-        let postID = individualPost["postID"] as! Int
-        let postContent = individualPost["postContent"] as! String
-        var postType: String
-        if let _ = individualPost["userHandle"] as? String {
-            postType = "pond"
-        } else {
-            postType = "anon"
-        }
-        
-        let shareCount = individualPost["shareCount"] as! Int
-        let newShareCount = shareCount + 1
-        
-        let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
-        
-        let shareFBAction = UIAlertAction(title: "Share on Facebook", style: .default, handler: { action in
-            cell.sharePicImageView.isHighlighted = false
-            cell.shareCountLabel.text = "\(newShareCount)"
+        if self.myID > 0 && self.myIDFIR != "0000000000000000000000000000" {
+            let position = sender.location(in: self.pondListTableView)
+            let indexPath: IndexPath! = self.pondListTableView.indexPathForRow(at: position)
+            self.parentRow = indexPath.row
             
-            if let imageURL = individualPost["imageURL"] as? URL {
-                self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Facebook", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
-            } else {
-                self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Facebook", imageURL: nil, orView: cell.whiteView, newShareCount: newShareCount)
-            }
-        })
-        alertController.addAction(shareFBAction)
-        
-        let shareTwitterAction = UIAlertAction(title: "Share on Twitter", style: .default, handler: { action in
-            cell.sharePicImageView.isHighlighted = false
-            cell.shareCountLabel.text = "\(newShareCount)"
+            let cell = self.pondListTableView.cellForRow(at: indexPath) as! PostTableViewCell
+            cell.sharePicImageView.isHighlighted = true
             
-            if let imageURL = individualPost["imageURL"] as? URL {
-                self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Twitter", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
-            } else {
-                self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Twitter", imageURL: nil, orView: cell.whiteView, newShareCount: newShareCount)
+            var individualPost: [String:Any]
+            switch self.segment {
+            case "pond":
+                individualPost = self.pondPosts[indexPath.row]
+            case "anon":
+                individualPost = self.anonPosts[indexPath.row]
+            case "hot":
+                individualPost = self.hotPosts[indexPath.row]
+            case "trending":
+                individualPost = self.trendingPosts[indexPath.row]
+            case "friend":
+                individualPost = self.friendPosts[indexPath.row]
+            default:
+                return
             }
-        })
-        alertController.addAction(shareTwitterAction)
-        
-        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { action in
-            cell.sharePicImageView.isHighlighted = false
-            self.observePond()
-        })
-        )
-        
-        alertController.view.tintColor = misc.nativColor
-        DispatchQueue.main.async(execute: { self.present(alertController, animated: true, completion: nil)
-        })
+            let postID = individualPost["postID"] as! Int
+            let postContent = individualPost["postContent"] as! String
+            var postType: String
+            if let _ = individualPost["userHandle"] as? String {
+                postType = "pond"
+            } else {
+                postType = "anon"
+            }
+            
+            let shareCount = individualPost["shareCount"] as! Int
+            let newShareCount = shareCount + 1
+            
+            let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+            
+            let shareFBAction = UIAlertAction(title: "Share on Facebook", style: .default, handler: { action in
+                cell.sharePicImageView.isHighlighted = false
+                cell.shareCountLabel.text = "\(newShareCount)"
+                
+                if let imageURL = individualPost["imageURL"] as? URL {
+                    self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Facebook", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
+                } else {
+                    self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Facebook", imageURL: nil, orView: cell.whiteView, newShareCount: newShareCount)
+                }
+            })
+            alertController.addAction(shareFBAction)
+            
+            let shareTwitterAction = UIAlertAction(title: "Share on Twitter", style: .default, handler: { action in
+                cell.sharePicImageView.isHighlighted = false
+                cell.shareCountLabel.text = "\(newShareCount)"
+                
+                if let imageURL = individualPost["imageURL"] as? URL {
+                    self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Twitter", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
+                } else {
+                    self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Twitter", imageURL: nil, orView: cell.whiteView, newShareCount: newShareCount)
+                }
+            })
+            alertController.addAction(shareTwitterAction)
+            
+            alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { action in
+                cell.sharePicImageView.isHighlighted = false
+                self.observePond()
+            })
+            )
+            
+            alertController.view.tintColor = misc.nativColor
+            DispatchQueue.main.async(execute: { self.present(alertController, animated: true, completion: nil)
+            })
+        }
     }
-    
+
     func sharePost(_ postID: Int, postType: String, postContent: String, socialMedia: String, imageURL: URL?, orView: UIView?, newShareCount: Int) {
         let token = misc.generateToken(16, firebaseID: self.myIDFIR)
         let iv = token.first!
@@ -2490,123 +2529,125 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
     }
     
     func upvotePost(sender: UITapGestureRecognizer) {
-        let position = sender.location(in: self.pondListTableView)
-        let indexPath: IndexPath! = self.pondListTableView.indexPathForRow(at: position)
-        self.parentRow = indexPath.row
-        
-        var individualPost: [String:Any]
-        switch self.segment {
-        case "pond":
-            individualPost = self.pondPosts[indexPath.row]
-        case "anon":
-            individualPost = self.anonPosts[indexPath.row]
-        case "hot":
-            individualPost = self.hotPosts[indexPath.row]
-        case "trending":
-            individualPost = self.trendingPosts[indexPath.row]
-        case "friend":
-            individualPost = self.friendPosts[indexPath.row]
-        default:
-            return
-        }
-        
-        let didIVote = individualPost["didIVote"] as! String
-        let postID = individualPost["postID"] as! Int
-        
-        if didIVote == "no" && postID > 0 {
-            let currentPoints = individualPost["pointsCount"] as! Int
-            let newPoints = currentPoints + 1
+        if self.myID > 0 && self.myIDFIR != "0000000000000000000000000000" {
+            let position = sender.location(in: self.pondListTableView)
+            let indexPath: IndexPath! = self.pondListTableView.indexPathForRow(at: position)
+            self.parentRow = indexPath.row
+            
+            var individualPost: [String:Any]
             switch self.segment {
             case "pond":
-                self.pondPosts[indexPath.row]["pointsCount"] = newPoints
-                self.pondPosts[indexPath.row]["didIVote"] = "yes"
+                individualPost = self.pondPosts[indexPath.row]
             case "anon":
-                self.anonPosts[indexPath.row]["pointsCount"] = newPoints
-                self.anonPosts[indexPath.row]["didIVote"] = "yes"
+                individualPost = self.anonPosts[indexPath.row]
             case "hot":
-                self.hotPosts[indexPath.row]["pointsCount"] = newPoints
-                self.hotPosts[indexPath.row]["didIVote"] = "yes"
+                individualPost = self.hotPosts[indexPath.row]
             case "trending":
-                self.trendingPosts[indexPath.row]["pointsCount"] = newPoints
-                self.trendingPosts[indexPath.row]["didIVote"] = "yes"
+                individualPost = self.trendingPosts[indexPath.row]
             case "friend":
-                self.friendPosts[indexPath.row]["pointsCount"] = newPoints
-                self.friendPosts[indexPath.row]["didIVote"] = "yes"
+                individualPost = self.friendPosts[indexPath.row]
             default:
                 return
             }
-            self.pondListTableView.reloadRows(at: [indexPath], with: .none)
             
+            let didIVote = individualPost["didIVote"] as! String
             let postID = individualPost["postID"] as! Int
-            var postType: String
-            if let _ = individualPost["userHandle"] as? String {
-                postType = "pond"
-            } else {
-                postType = "anon"
-            }
             
-            let token = misc.generateToken(16, firebaseID: self.myIDFIR)
-            let iv = token.first!
-            let tokenString = token.last!
-            let key = token[1]
-            
-            do {
-                let aes = try AES(key: key, iv: iv)
-                let cipherText = try aes.encrypt(tokenString.utf8.map({$0}))
+            if didIVote == "no" && postID > 0 {
+                let currentPoints = individualPost["pointsCount"] as! Int
+                let newPoints = currentPoints + 1
+                switch self.segment {
+                case "pond":
+                    self.pondPosts[indexPath.row]["pointsCount"] = newPoints
+                    self.pondPosts[indexPath.row]["didIVote"] = "yes"
+                case "anon":
+                    self.anonPosts[indexPath.row]["pointsCount"] = newPoints
+                    self.anonPosts[indexPath.row]["didIVote"] = "yes"
+                case "hot":
+                    self.hotPosts[indexPath.row]["pointsCount"] = newPoints
+                    self.hotPosts[indexPath.row]["didIVote"] = "yes"
+                case "trending":
+                    self.trendingPosts[indexPath.row]["pointsCount"] = newPoints
+                    self.trendingPosts[indexPath.row]["didIVote"] = "yes"
+                case "friend":
+                    self.friendPosts[indexPath.row]["pointsCount"] = newPoints
+                    self.friendPosts[indexPath.row]["didIVote"] = "yes"
+                default:
+                    return
+                }
+                self.pondListTableView.reloadRows(at: [indexPath], with: .none)
                 
-                let sendURL = URL(string: "https://dotnative.io/sendPoint")
-                var sendRequest = URLRequest(url: sendURL!)
-                sendRequest.httpMethod = "POST"
-                
-                let sendString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&postID=\(postID)&postType=\(postType)"
-                sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
-
-                let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
-                    (data, response, error) in
-                    
-                    if error != nil {
-                        print(error ?? "error")
-                        self.displayAlert("uhh, Houston, we have a problem", alertMessage: "Sorry, could not connect to le internet. :(")
-                        return
-                    }
-                    
-                    do{
-                        let json = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers) as? NSDictionary
-                        
-                        if let parseJSON = json {
-                            let status: String = parseJSON["status"] as! String
-                            let message = parseJSON["message"] as! String
-                            print("status: \(status), message: \(message)")
-
-                            DispatchQueue.main.async(execute: {
-                                if status == "error" {
-                                    self.displayAlert("Oops", alertMessage: "Sorry, we messed up. Your upvote may not have gone through. Please report the bug by going to the report section in the menu if this persists.")
-                                    return
-                                }
-                                
-                                if status == "success" {
-                                    if postType == "pond" {
-                                        self.logPondPostUpvoted(postID)
-                                    } else {
-                                        self.logAnonPostUpvoted(postID)
-                                    }
-                                    self.writePostUpvoted(postID, postType: postType)
-                                }
-                            })
-                        }
-                        
-                    } catch {
-                        self.displayAlert("Oops", alertMessage: "We're updating our servers right now. Please try again later.")
-                        print(error)
-                        return
-                    }
+                let postID = individualPost["postID"] as! Int
+                var postType: String
+                if let _ = individualPost["userHandle"] as? String {
+                    postType = "pond"
+                } else {
+                    postType = "anon"
                 }
                 
-                task.resume()
+                let token = misc.generateToken(16, firebaseID: self.myIDFIR)
+                let iv = token.first!
+                let tokenString = token.last!
+                let key = token[1]
                 
-            } catch {
-                self.displayAlert("Token Error", alertMessage: "We messed up. Please report the bug by going to the report section in the menu if this persists.")
-                return
+                do {
+                    let aes = try AES(key: key, iv: iv)
+                    let cipherText = try aes.encrypt(tokenString.utf8.map({$0}))
+                    
+                    let sendURL = URL(string: "https://dotnative.io/sendPoint")
+                    var sendRequest = URLRequest(url: sendURL!)
+                    sendRequest.httpMethod = "POST"
+                    
+                    let sendString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&postID=\(postID)&postType=\(postType)"
+                    sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
+                    
+                    let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
+                        (data, response, error) in
+                        
+                        if error != nil {
+                            print(error ?? "error")
+                            self.displayAlert("uhh, Houston, we have a problem", alertMessage: "Sorry, could not connect to le internet. :(")
+                            return
+                        }
+                        
+                        do{
+                            let json = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers) as? NSDictionary
+                            
+                            if let parseJSON = json {
+                                let status: String = parseJSON["status"] as! String
+                                let message = parseJSON["message"] as! String
+                                print("status: \(status), message: \(message)")
+                                
+                                DispatchQueue.main.async(execute: {
+                                    if status == "error" {
+                                        self.displayAlert("Oops", alertMessage: "Sorry, we messed up. Your upvote may not have gone through. Please report the bug by going to the report section in the menu if this persists.")
+                                        return
+                                    }
+                                    
+                                    if status == "success" {
+                                        if postType == "pond" {
+                                            self.logPondPostUpvoted(postID)
+                                        } else {
+                                            self.logAnonPostUpvoted(postID)
+                                        }
+                                        self.writePostUpvoted(postID, postType: postType)
+                                    }
+                                })
+                            }
+                            
+                        } catch {
+                            self.displayAlert("Oops", alertMessage: "We're updating our servers right now. Please try again later.")
+                            print(error)
+                            return
+                        }
+                    }
+                    
+                    task.resume()
+                    
+                } catch {
+                    self.displayAlert("Token Error", alertMessage: "We messed up. Please report the bug by going to the report section in the menu if this persists.")
+                    return
+                }
             }
         }
     }
@@ -2649,7 +2690,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                 sendString.append("&locationTag=\(tags)")
             }
             sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
-            
+
             let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
                 (data, response, error) in
                 
@@ -2821,6 +2862,8 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                             self.activityView.removeFromSuperview()
                             
                             if status == "error" {
+                                self.firstLoad = false
+                                self.pondListTableView.reloadData()
                                 self.displayAlert("Oops", alertMessage: "We encountered and error. Please report the bug by going to the report section in the menu if this persists.")
                                 return
                             }
@@ -2912,7 +2955,6 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                                                     let imageURL = URL(string: "https://\(imageBucket).s3.amazonaws.com/\(imageKey)")!
                                                     if !self.urlArray.contains(imageURL) {
                                                         self.urlArray.append(imageURL)
-                                                        SDWebImagePrefetcher.shared().prefetchURLs([imageURL])
                                                     }
                                                     post["imageURL"] = imageURL
                                                 }
@@ -2935,7 +2977,6 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                                                     let imageURL = URL(string: "https://\(imageBucket).s3.amazonaws.com/\(imageKey)")!
                                                     if !self.urlArray.contains(imageURL) {
                                                         self.urlArray.append(imageURL)
-                                                        SDWebImagePrefetcher.shared().prefetchURLs([imageURL])
                                                     }
                                                     post["imageURL"] = imageURL
                                                 }
@@ -3016,13 +3057,44 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                                             return
                                         }
                                     }
-                                }
+                                    
+                                    if !posts.isEmpty {
+                                        var firstRows = 4
+                                        let maxCount = posts.count
+                                        if firstRows > (maxCount - 1) {
+                                            firstRows = maxCount - 1
+                                        }
+                                        
+                                        var urlsToPrefetch: [URL] = []
+                                        for index in 0...firstRows {
+                                            let post = posts[index]
+                                            if let picURL = post["picURL"] as? URL {
+                                                urlsToPrefetch.append(picURL)
+                                            }
+                                            if let imageURL = post["imageURL"] as? URL {
+                                                urlsToPrefetch.append(imageURL)
+                                            }
+                                        }
+                                        
+                                        if self.firstLoad {
+                                            SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch, progress: nil, completed: { (completed, skipped) in
+                                                self.firstLoad = false
+                                                self.pondListTableView.reloadData()
+                                            })
+                                        } else {
+                                            SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch)
+                                            self.firstLoad = false
+                                            self.pondListTableView.reloadData()
+                                        }
+                                        
+                                    } else {
+                                        self.firstLoad = false
+                                        self.pondListTableView.reloadData()
+                                    }
+                                } // parse dict
                                 
-                                self.firstLoad = false
-                                self.pondListTableView.reloadData()
-                            }
-                            
-                        })
+                            } // success
+                        }) // main
                     }
                     
                 } catch {

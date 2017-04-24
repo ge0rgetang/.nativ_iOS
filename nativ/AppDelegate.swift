@@ -64,7 +64,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         
         self.window?.tintColor = nativColor
         
-        SDWebImageDownloader.shared().maxConcurrentDownloads = 10
+        SDWebImageDownloader.shared().maxConcurrentDownloads = 15
         
         return true
     }
@@ -205,7 +205,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any]) {
         if let aps: NSDictionary = userInfo["aps"] as? NSDictionary {
-        print(userInfo)
             let badgeNumber = aps["badge"] as! Int
             UserDefaults.standard.set(badgeNumber, forKey: "badgeNumber.nativ")
             UIApplication.shared.applicationIconBadgeNumber = badgeNumber
@@ -271,7 +270,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         sendRequest.httpMethod = "POST"
         
         let sendString = "userID=\(myID)&deviceID=\(deviceToken)"
-        
+        print(sendString)
         sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
         
         let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {

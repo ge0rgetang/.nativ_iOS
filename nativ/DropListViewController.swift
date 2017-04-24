@@ -27,6 +27,7 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
     var newPostsCount: Int = 0
     var parentRow: Int = 0
     var isRemoved = false
+    var lastContentOffset: CGFloat = 0
     
     var parentPostToPass: [String:Any] = [:]
     var userIDToPass: Int = -2
@@ -424,6 +425,41 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
         } else {
             self.scrollPosition = "middle"
         }
+        
+        // prefetch images on scroll down
+        let posts = self.dropList
+        if !posts.isEmpty {
+            if self.lastContentOffset < scrollView.contentOffset.y {
+                let visibleCells = self.dropListTableView.visibleCells
+                if let lastCell = visibleCells.last {
+                    let lastIndexPath = self.dropListTableView.indexPath(for: lastCell)
+                    let lastRow = lastIndexPath!.row
+                    var nextLastRow = lastRow + 10
+                    
+                    let maxCount = posts.count
+                    if nextLastRow > (maxCount - 1) {
+                        nextLastRow = maxCount - 1
+                    }
+                    
+                    if nextLastRow > lastRow {
+                        nextLastRow = lastRow
+                    }
+                    
+                    var urlsToPrefetch: [URL] = []
+                    for index in lastRow...nextLastRow {
+                        let post = posts[index]
+                        if let picURL = post["picURL"] as? URL {
+                            urlsToPrefetch.append(picURL)
+                        }
+                        if let replyPicURL = post["replyPicURL"] as? URL {
+                            urlsToPrefetch.append(replyPicURL)
+                        }
+                    }
+                    SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch)
+                }
+            }
+        }
+        self.lastContentOffset = scrollView.contentOffset.y
     }
     
     // MARK: - Misc
@@ -473,6 +509,7 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
     }
     
     func scrollToTop() {
+        self.lastContentOffset = 0 
         self.dropListTableView.setContentOffset(.zero, animated: false)
         self.scrollToTopButton.removeFromSuperview()
     }
@@ -709,6 +746,8 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
                         
                         DispatchQueue.main.async(execute: {
                             if status == "error" {
+                                self.firstLoad = false
+                                self.dropListTableView.reloadData()
                                 self.displayAlert("Oops", alertMessage: "We've encountered an error and can't load posts. Please report the bug by going to the report section in the menu if this persists.")
                                 return
                             }
@@ -761,7 +800,6 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
                                                 let imageURL = URL(string: "https://\(imageBucket).s3.amazonaws.com/\(imageKey)")!
                                                 if !self.urlArray.contains(imageURL) {
                                                     self.urlArray.append(imageURL)
-                                                    SDWebImagePrefetcher.shared().prefetchURLs([imageURL])
                                                 }
                                                 post["imageURL"] = imageURL
                                             }
@@ -784,7 +822,6 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
                                             let picURL = URL(string: "https://\(bucket).s3.amazonaws.com/\(key)")!
                                             if !self.urlArray.contains(picURL) {
                                                 self.urlArray.append(picURL)
-                                                SDWebImagePrefetcher.shared().prefetchURLs([picURL])
                                             }
                                             
                                             var post: [String:Any] = ["postID": postID, "userID": userID, "userIDFIR": userIDFIR, "userName": userName, "userHandle": userHandle, "postContent": postContent, "timestamp": timestamp, "replyCount": replyCount, "pointsCount": pointsCount, "didIVote": didIVote, "picURL": picURL, "shareCount": shareCount, "longitude": longitude, "latitude": latitude]
@@ -808,7 +845,6 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
                                                 let replyPicURL = URL(string: "https://\(replyBucket).s3.amazonaws.com/\(replyKey)")!
                                                 if !self.urlArray.contains(replyPicURL) {
                                                     self.urlArray.append(replyPicURL)
-                                                    SDWebImagePrefetcher.shared().prefetchURLs([replyPicURL])
                                                 }
 
                                                 let replyDrop: [String:Any] = ["replyID": replyID, "replyIDFIR": replyIDFIR, "replyContent": replyContent, "replyTimestamp": replyTimestamp, "replyHandle": replyHandle, "replyPicURL": replyPicURL]
@@ -831,13 +867,44 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
                                     } else {
                                         self.dropList = posts
                                     }
-                                }
+                                    
+                                    if !posts.isEmpty {
+                                        var firstRows = 8
+                                        let maxCount = posts.count
+                                        if firstRows > (maxCount - 1) {
+                                            firstRows = maxCount - 1
+                                        }
+                                        
+                                        var urlsToPrefetch: [URL] = []
+                                        for index in 0...firstRows {
+                                            let post = posts[index]
+                                            if let picURL = post["picURL"] as? URL {
+                                                urlsToPrefetch.append(picURL)
+                                            }
+                                            if let replyPicURL = post["replyPicURL"] as? URL {
+                                                urlsToPrefetch.append(replyPicURL)
+                                            }
+                                        }
+                                        
+                                        if self.firstLoad {
+                                            SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch, progress: nil, completed: { (completed, skipped) in
+                                                self.firstLoad = false
+                                                self.dropListTableView.reloadData()
+                                            })
+                                        } else {
+                                            SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch)
+                                            self.firstLoad = false
+                                            self.dropListTableView.reloadData()
+                                        }
+                                        
+                                    } else {
+                                        self.firstLoad = false
+                                        self.dropListTableView.reloadData()
+                                    }
+                                } // parse dict
                                 
-                                self.firstLoad = false
-                                self.dropListTableView.reloadData()
-                            }
-                            
-                        })
+                            } // success
+                        }) // main
                     }
                     
                 } catch {

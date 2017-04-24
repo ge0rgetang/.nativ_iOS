@@ -38,6 +38,7 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
     var parentRow: Int = -2
     var parentSection: Int = -2
     var isRemoved: Bool = false
+    var lastContentOffset: CGFloat = 0
     
     var searchController: UISearchController!
     
@@ -339,6 +340,15 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
             case 0:
                 let individualUser = self.chats[indexPath.row]
                 let cell = tableView.dequeueReusableCell(withIdentifier: "friendChatCell", for: indexPath) as! UserListTableViewCell
+                
+                let userHandle = individualUser["userHandle"] as! String
+                cell.userHandleLabel.text = "@\(userHandle)"
+                let picURL = individualUser["picURL"] as! URL
+                cell.userPicImageView.layer.cornerRadius = cell.userPicImageView.frame.size.width/2
+                cell.userPicImageView.clipsToBounds = true
+                cell.userPicImageView.sd_setImage(with: picURL)
+                let tapPicToViewUser = UITapGestureRecognizer(target: self, action: #selector(self.presentUserProfile))
+                cell.userPicImageView.addGestureRecognizer(tapPicToViewUser)
                 
                 cell.userMessageLabel.numberOfLines = 0
                 cell.userMessageLabel.text = individualUser["lastChat"] as? String
@@ -764,23 +774,24 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
             self.scrollToTopButton.removeFromSuperview()
         }
         
+        var users: [[String:Any]] = []
+        let segmentIndex = self.segmentedControl.selectedSegmentIndex
+        switch segmentIndex {
+        case 0:
+            users = self.chats
+        case 1:
+            users = self.friendsAddedTo
+        case 2:
+            users = self.addedMe
+        default:
+            return
+        }
+        
         if offset == 0 {
             self.scrollPosition = "top"
             self.observeFriendList()
         } else if offset == (contentHeight - frameHeight) {
             self.scrollPosition = "bottom"
-            let segmentIndex = self.segmentedControl.selectedSegmentIndex
-            var users: [[String:Any]]
-            switch segmentIndex {
-            case 0:
-                users = self.chats
-            case 1:
-                users = self.friendsAddedTo
-            case 2:
-                users = self.addedMe
-            default:
-                return
-            }
             if users.count >= 42 && !self.searchController.isActive {
                 self.getFriendList()
             }
@@ -790,6 +801,37 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
         } else {
             self.scrollPosition = "middle"
         }
+        
+        // prefetch images on scroll down
+        if !users.isEmpty {
+            if self.lastContentOffset < scrollView.contentOffset.y {
+                let visibleCells = self.friendListTableView.visibleCells
+                if let lastCell = visibleCells.last {
+                    let lastIndexPath = self.friendListTableView.indexPath(for: lastCell)
+                    let lastRow = lastIndexPath!.row
+                    var nextLastRow = lastRow + 10
+                    
+                    let maxCount = users.count
+                    if nextLastRow > (maxCount - 1) {
+                        nextLastRow = maxCount - 1
+                    }
+                    
+                    if nextLastRow > lastRow {
+                        nextLastRow = lastRow
+                    }
+                    
+                    var urlsToPrefetch: [URL] = []
+                    for index in lastRow...nextLastRow {
+                        let user = users[index]
+                        if let picURL = user["picURL"] as? URL {
+                            urlsToPrefetch.append(picURL)
+                        }
+                    }
+                    SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch)
+                }
+            }
+        }
+        self.lastContentOffset = scrollView.contentOffset.y
     }
     
     // MARK: - Keyboard
@@ -941,6 +983,7 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
     }
     
     func scrollToTop() {
+        self.lastContentOffset = 0
         self.friendListTableView.setContentOffset(.zero, animated: false)
         self.scrollToTopButton.removeFromSuperview()
     }
@@ -1136,7 +1179,6 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
             let picURL = URL(string: "https://\(bucket).s3.amazonaws.com/\(key)")!
             if !self.urlArray.contains(picURL) {
                 self.urlArray.append(picURL)
-                SDWebImagePrefetcher.shared().prefetchURLs([picURL])
             }
             
             if cellType == "user" || cellType == "search" {
@@ -1166,6 +1208,24 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                 let user: [String: Any] = ["userID": userID, "userIDFIR": userIDFIR, "isFriend": isFriend, "senderID": senderID, "userHandle": userHandle, "lastChat": lastChat, "picURL": picURL]
                 users.append(user)
             }
+            
+            if !users.isEmpty {
+                var firstRows = 8
+                let maxCount = users.count
+                if firstRows > (maxCount - 1) {
+                    firstRows = maxCount - 1
+                }
+                
+                var urlsToPrefetch: [URL] = []
+                for index in 0...firstRows {
+                    let user = users[index]
+                    if let picURL = user["picURL"] as? URL {
+                        urlsToPrefetch.append(picURL)
+                    }
+                }
+                SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch)
+            }
+
         }
         
         return users

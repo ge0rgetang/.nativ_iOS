@@ -28,6 +28,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
     var isKeyboardUp: Bool = false
     var isEditingPost: Bool = false
     var segueSender: String = "pondList"
+    var lastContentOffset: CGFloat = 0
     
     var userIDToPass: Int = -2
     var userIDFIRToPass: String = "-2"
@@ -740,6 +741,38 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         } else {
             self.scrollPosition = "middle"
         }
+        
+        // prefetch images on scroll down
+        let posts = self.replyPosts
+        if !posts.isEmpty {
+            if self.lastContentOffset < scrollView.contentOffset.y {
+                let visibleCells = self.dropTableView.visibleCells
+                if let lastCell = visibleCells.last {
+                    let lastIndexPath = self.dropTableView.indexPath(for: lastCell)
+                    let lastRow = lastIndexPath!.row
+                    var nextLastRow = lastRow + 10
+                    
+                    let maxCount = posts.count
+                    if nextLastRow > (maxCount - 1) {
+                        nextLastRow = maxCount - 1
+                    }
+                    
+                    if nextLastRow > lastRow {
+                        nextLastRow = lastRow
+                    }
+                    
+                    var urlsToPrefetch: [URL] = []
+                    for index in lastRow...nextLastRow {
+                        let post = posts[index]
+                        if let picURL = post["picURL"] as? URL {
+                            urlsToPrefetch.append(picURL)
+                        }
+                    }
+                    SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch)
+                }
+            }
+        }
+        self.lastContentOffset = scrollView.contentOffset.y
     }
     
     // MARK: - TextView
@@ -981,6 +1014,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
     }
     
     func scrollToTop() {
+        self.lastContentOffset = 0
         self.dropTableView.setContentOffset(.zero, animated: false)
         self.scrollToTopButton.removeFromSuperview()
     }
@@ -1263,54 +1297,56 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
     func presentSharePostSheet(sender: UITapGestureRecognizer) {
         self.removeObserverForReplies()
         
-        let individualPost = self.parentPost
-        let position = sender.location(in: self.dropTableView)
-        let indexPath: IndexPath! = self.dropTableView.indexPathForRow(at: position)
-        self.parentRow = indexPath.row
-
-//        let header = self.dropTableView.headerView(forSection: 0)
-        let cell = self.dropTableView.cellForRow(at: indexPath) as! PostTableViewCell
-        cell.sharePicImageView.isHighlighted = true
-        
-        let postContent = individualPost["postContent"] as! String
-        let shareCount = individualPost["shareCount"] as! Int
-        let newShareCount = shareCount + 1
-        
-        let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
-        
-        let shareFBAction = UIAlertAction(title: "Share on Facebook", style: .default, handler: { action in
-            cell.sharePicImageView.isHighlighted = false
-            cell.shareCountLabel.text = "\(newShareCount)"
+        if self.myID > 0 && self.myIDFIR != "0000000000000000000000000000" {
+            let individualPost = self.parentPost
+            let position = sender.location(in: self.dropTableView)
+            let indexPath: IndexPath! = self.dropTableView.indexPathForRow(at: position)
+            self.parentRow = indexPath.row
             
-            if let imageURL = individualPost["imageURL"] as? URL {
-                self.sharePost(postContent, socialMedia: "Facebook", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
-            } else {
-                self.sharePost(postContent, socialMedia: "Facebook", imageURL: nil, orView: cell.contentView, newShareCount: newShareCount)
-            }
-        })
-        alertController.addAction(shareFBAction)
-        
-        let shareTwitterAction = UIAlertAction(title: "Share on Twitter", style: .default, handler: { action in
-            cell.sharePicImageView.isHighlighted = false
-            cell.shareCountLabel.text = "\(newShareCount)"
+            //        let header = self.dropTableView.headerView(forSection: 0)
+            let cell = self.dropTableView.cellForRow(at: indexPath) as! PostTableViewCell
+            cell.sharePicImageView.isHighlighted = true
             
-            if let imageURL = individualPost["imageURL"] as? URL {
-                self.sharePost(postContent, socialMedia: "Twitter", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
-            } else {
-                self.sharePost(postContent, socialMedia: "Twitter", imageURL: nil, orView: cell.contentView, newShareCount: newShareCount)
-            }
-        })
-        alertController.addAction(shareTwitterAction)
-        
-        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { action in
-            cell.sharePicImageView.isHighlighted = false
-            self.observeReplies()
-        })
-        )
-        
-        alertController.view.tintColor = misc.nativColor
-        DispatchQueue.main.async(execute: { self.present(alertController, animated: true, completion: nil)
-        })
+            let postContent = individualPost["postContent"] as! String
+            let shareCount = individualPost["shareCount"] as! Int
+            let newShareCount = shareCount + 1
+            
+            let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+            
+            let shareFBAction = UIAlertAction(title: "Share on Facebook", style: .default, handler: { action in
+                cell.sharePicImageView.isHighlighted = false
+                cell.shareCountLabel.text = "\(newShareCount)"
+                
+                if let imageURL = individualPost["imageURL"] as? URL {
+                    self.sharePost(postContent, socialMedia: "Facebook", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
+                } else {
+                    self.sharePost(postContent, socialMedia: "Facebook", imageURL: nil, orView: cell.contentView, newShareCount: newShareCount)
+                }
+            })
+            alertController.addAction(shareFBAction)
+            
+            let shareTwitterAction = UIAlertAction(title: "Share on Twitter", style: .default, handler: { action in
+                cell.sharePicImageView.isHighlighted = false
+                cell.shareCountLabel.text = "\(newShareCount)"
+                
+                if let imageURL = individualPost["imageURL"] as? URL {
+                    self.sharePost(postContent, socialMedia: "Twitter", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
+                } else {
+                    self.sharePost(postContent, socialMedia: "Twitter", imageURL: nil, orView: cell.contentView, newShareCount: newShareCount)
+                }
+            })
+            alertController.addAction(shareTwitterAction)
+            
+            alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { action in
+                cell.sharePicImageView.isHighlighted = false
+                self.observeReplies()
+            })
+            )
+            
+            alertController.view.tintColor = misc.nativColor
+            DispatchQueue.main.async(execute: { self.present(alertController, animated: true, completion: nil)
+            })
+        }
     }
     
     func sharePost(_ postContent: String, socialMedia: String, imageURL: URL?, orView: UIView?, newShareCount: Int) {
@@ -1403,88 +1439,90 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
     }
     
     func upvotePost() {
-        let individualPost = self.parentPost
-        
-        let didIVote = individualPost["didIVote"] as! String
-        let postID = individualPost["postID"] as! Int
-        
-        if didIVote == "no" && postID > 0 {
-            let currentPoints = individualPost["pointsCount"] as! Int
-            let newPoints = currentPoints + 1
-            self.parentPost["pointsCount"] = newPoints
-            self.parentPost["didIVote"] = "yes"
-            self.dropTableView.reloadData()
+        if self.myID > 0 && self.myIDFIR != "0000000000000000000000000000" {
+            let individualPost = self.parentPost
             
+            let didIVote = individualPost["didIVote"] as! String
             let postID = individualPost["postID"] as! Int
-            var postType: String
-            if let _ = individualPost["userHandle"] as? String {
-                postType = "pond"
-            } else {
-                postType = "anon"
-            }
             
-            let token = misc.generateToken(16, firebaseID: self.myIDFIR)
-            let iv = token.first!
-            let tokenString = token.last!
-            let key = token[1]
-            
-            do {
-                let aes = try AES(key: key, iv: iv)
-                let cipherText = try aes.encrypt(tokenString.utf8.map({$0}))
+            if didIVote == "no" && postID > 0 {
+                let currentPoints = individualPost["pointsCount"] as! Int
+                let newPoints = currentPoints + 1
+                self.parentPost["pointsCount"] = newPoints
+                self.parentPost["didIVote"] = "yes"
+                self.dropTableView.reloadData()
                 
-                let sendURL = URL(string: "https://dotnative.io/sendPoint")
-                var sendRequest = URLRequest(url: sendURL!)
-                sendRequest.httpMethod = "POST"
-                
-                let sendString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&postID=\(postID)&postType=\(postType)"
-                sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
-                
-                let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
-                    (data, response, error) in
-                    
-                    if error != nil {
-                        print(error ?? "error")
-                        self.displayAlert("uhh, Houston, we have a problem", alertMessage: "Sorry, could not connect to le internet. :(")
-                        return
-                    }
-                    
-                    do{
-                        let json = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers) as? NSDictionary
-                        
-                        if let parseJSON = json {
-                            let status: String = parseJSON["status"] as! String
-                            let message = parseJSON["message"] as! String
-                            print("status: \(status), message: \(message)")
-
-                            DispatchQueue.main.async(execute: {
-                                if status == "error" {
-                                    self.displayAlert("Oops", alertMessage: "Sorry, we messed up. Your upvote may not have gone through. Please report the bug by going to the report section in the menu if this persists.")
-                                    return
-                                }
-                                
-                                if status == "success" {
-                                    if postType == "pond" {
-                                        self.logPondPostUpvoted(postID)
-                                    } else {
-                                        self.logAnonPostUpvoted(postID)
-                                    }
-                                    self.writePostUpvoted(postID, postType: postType)
-                                }
-                            })
-                        }
-                        
-                    } catch {
-                        self.displayAlert("Oops", alertMessage: "We're updating our servers right now. Please try again later.")
-                        print(error)
-                        return
-                    }
+                let postID = individualPost["postID"] as! Int
+                var postType: String
+                if let _ = individualPost["userHandle"] as? String {
+                    postType = "pond"
+                } else {
+                    postType = "anon"
                 }
                 
-                task.resume()
+                let token = misc.generateToken(16, firebaseID: self.myIDFIR)
+                let iv = token.first!
+                let tokenString = token.last!
+                let key = token[1]
                 
-            } catch {
-                self.displayAlert("Token Error", alertMessage: "We messed up. Please report the bug by going to the report section in the menu if this persists.")
-                return
+                do {
+                    let aes = try AES(key: key, iv: iv)
+                    let cipherText = try aes.encrypt(tokenString.utf8.map({$0}))
+                    
+                    let sendURL = URL(string: "https://dotnative.io/sendPoint")
+                    var sendRequest = URLRequest(url: sendURL!)
+                    sendRequest.httpMethod = "POST"
+                    
+                    let sendString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&postID=\(postID)&postType=\(postType)"
+                    sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
+                    
+                    let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
+                        (data, response, error) in
+                        
+                        if error != nil {
+                            print(error ?? "error")
+                            self.displayAlert("uhh, Houston, we have a problem", alertMessage: "Sorry, could not connect to le internet. :(")
+                            return
+                        }
+                        
+                        do{
+                            let json = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers) as? NSDictionary
+                            
+                            if let parseJSON = json {
+                                let status: String = parseJSON["status"] as! String
+                                let message = parseJSON["message"] as! String
+                                print("status: \(status), message: \(message)")
+                                
+                                DispatchQueue.main.async(execute: {
+                                    if status == "error" {
+                                        self.displayAlert("Oops", alertMessage: "Sorry, we messed up. Your upvote may not have gone through. Please report the bug by going to the report section in the menu if this persists.")
+                                        return
+                                    }
+                                    
+                                    if status == "success" {
+                                        if postType == "pond" {
+                                            self.logPondPostUpvoted(postID)
+                                        } else {
+                                            self.logAnonPostUpvoted(postID)
+                                        }
+                                        self.writePostUpvoted(postID, postType: postType)
+                                    }
+                                })
+                            }
+                            
+                        } catch {
+                            self.displayAlert("Oops", alertMessage: "We're updating our servers right now. Please try again later.")
+                            print(error)
+                            return
+                        }
+                    }
+                    
+                    task.resume()
+                    
+                } catch {
+                    self.displayAlert("Token Error", alertMessage: "We messed up. Please report the bug by going to the report section in the menu if this persists.")
+                    return
+                }
             }
         }
     }
@@ -1655,6 +1693,8 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                             self.activityView.removeFromSuperview()
                             
                             if status == "error" {
+                                self.firstLoad = false
+                                self.dropTableView.reloadData()
                                 self.displayAlert("Oops", alertMessage: "We've encountered an error and can't load posts. Please report the bug by going to the report section in the menu if this persists.")
                                 return
                             }
@@ -1716,7 +1756,6 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                                                     let imageURL = URL(string: "https://\(imageBucket).s3.amazonaws.com/\(imageKey)")!
                                                     if !self.urlArray.contains(imageURL) {
                                                         self.urlArray.append(imageURL)
-                                                        SDWebImagePrefetcher.shared().prefetchURLs([imageURL])
                                                     }
                                                     post["imageURL"] = imageURL
                                                 }
@@ -1739,7 +1778,6 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                                                     let imageURL = URL(string: "https://\(imageBucket).s3.amazonaws.com/\(imageKey)")!
                                                     if !self.urlArray.contains(imageURL) {
                                                         self.urlArray.append(imageURL)
-                                                        SDWebImagePrefetcher.shared().prefetchURLs([imageURL])
                                                     }
                                                     post["imageURL"] = imageURL
                                                 }
@@ -1796,13 +1834,44 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                                     } else {
                                         self.replyPosts = replies
                                     }
-                                }
+                                    
+                                    if !replies.isEmpty {
+                                        var firstRows = 5
+                                        let maxCount = replies.count
+                                        if firstRows > (maxCount - 1) {
+                                            firstRows = maxCount - 1
+                                        }
+                                        
+                                        var urlsToPrefetch: [URL] = []
+                                        for index in 0...firstRows {
+                                            let reply = replies[index]
+                                            if let picURL = reply["picURL"] as? URL {
+                                                urlsToPrefetch.append(picURL)
+                                            }
+                                            if let imageURL = reply["imageURL"] as? URL {
+                                                urlsToPrefetch.append(imageURL)
+                                            }
+                                        }
+                                        
+                                        if self.firstLoad {
+                                            SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch, progress: nil, completed: { (completed, skipped) in
+                                                self.firstLoad = false
+                                                self.dropTableView.reloadData()
+                                            })
+                                        } else {
+                                            SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch)
+                                            self.firstLoad = false
+                                            self.dropTableView.reloadData()
+                                        }
+                                        
+                                    }  else {
+                                        self.firstLoad = false
+                                        self.dropTableView.reloadData()
+                                    }
+                                } // parse dict
                                 
-                                self.firstLoad = false
-                                self.dropTableView.reloadData()
-                            }
-                            
-                        })
+                            } // success
+                        }) // main
                     }
                     
                 } catch {
@@ -1941,7 +2010,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                 
                 let sendString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&postID=\(postID)&action=\(action)&postType=\(postType)"
                 sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
-                
+
                 let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
                     (data, response, error) in
                     

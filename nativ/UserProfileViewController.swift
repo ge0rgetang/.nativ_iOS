@@ -31,7 +31,8 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
     var isRemoved: Bool = false
     var newPostsCount: Int = 0
     var fromHandle: Bool = false 
-    
+    var lastContentOffset: CGFloat = 0
+
     var parentRow: Int = 0
     var imageURLToPass: URL!
     var postContentToPass: String!
@@ -645,6 +646,40 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
             self.scrollPosition = "middle"
         }
         
+        // prefetch images on scroll down
+        let posts = self.userPosts
+        if !posts.isEmpty {
+            if self.lastContentOffset < scrollView.contentOffset.y {
+                let visibleCells = self.userProfileTableView.visibleCells
+                if let lastCell = visibleCells.last {
+                    let lastIndexPath = self.userProfileTableView.indexPath(for: lastCell)
+                    let lastRow = lastIndexPath!.row
+                    var nextLastRow = lastRow + 5
+                    
+                    let maxCount = posts.count
+                    if nextLastRow > (maxCount - 1) {
+                        nextLastRow = maxCount - 1
+                    }
+                    
+                    if nextLastRow > lastRow {
+                        nextLastRow = lastRow
+                    }
+                    
+                    var urlsToPrefetch: [URL] = []
+                    for index in lastRow...nextLastRow {
+                        let post = posts[index]
+                        if let picURL = post["picURL"] as? URL {
+                            urlsToPrefetch.append(picURL)
+                        }
+                        if let imageURL = post["imageURL"] as? URL {
+                            urlsToPrefetch.append(imageURL)
+                        }
+                    }
+                    SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch)
+                }
+            }
+        }
+        self.lastContentOffset = scrollView.contentOffset.y
     }
     
     // MARK: TextField
@@ -760,6 +795,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
     }
     
     func scrollToTop() {
+        self.lastContentOffset = 0
         self.userProfileTableView.setContentOffset(.zero, animated: false)
         self.scrollToTopButton.removeFromSuperview()
     }
@@ -1422,6 +1458,8 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                             self.activityView.removeFromSuperview()
                             
                             if status == "error" {
+                                self.firstLoad = false
+                                self.userProfileTableView.reloadData()
                                 self.displayAlert("Oops", alertMessage: "We've encountered an error and can't load this profile. Please report the bug in by going to the report section of the menu.")
                                 return
                             }
@@ -1540,7 +1578,6 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                                             let imageURL = URL(string: "https://\(imageBucket).s3.amazonaws.com/\(imageKey)")!
                                             if !self.urlArray.contains(imageURL) {
                                                 self.urlArray.append(imageURL)
-                                                SDWebImagePrefetcher.shared().prefetchURLs([imageURL])
                                             }
                                             post["imageURL"] = imageURL
                                         }
@@ -1561,14 +1598,44 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                                     } else {
                                         self.userPosts = posts
                                     }
-                                }
+                                    
+                                    if !posts.isEmpty {
+                                        var firstRows = 3
+                                        let maxCount = posts.count
+                                        if firstRows > (maxCount - 1) {
+                                            firstRows = maxCount - 1
+                                        }
+                                        
+                                        var urlsToPrefetch: [URL] = []
+                                        for index in 0...firstRows {
+                                            let post = posts[index]
+                                            if let picURL = post["picURL"] as? URL {
+                                                urlsToPrefetch.append(picURL)
+                                            }
+                                            if let imageURL = post["imageURL"] as? URL {
+                                                urlsToPrefetch.append(imageURL)
+                                            }
+                                        }
+                                        
+                                        if self.firstLoad {
+                                            SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch, progress: nil, completed: { (completed, skipped) in
+                                                self.firstLoad = false
+                                                self.userProfileTableView.reloadData()
+                                            })
+                                        } else {
+                                            SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch)
+                                            self.firstLoad = false
+                                            self.userProfileTableView.reloadData()
+                                        }
+                                        
+                                    }  else {
+                                        self.firstLoad = false
+                                        self.userProfileTableView.reloadData()
+                                    }
+                                } // parse dict
                                 
-                                self.firstLoad = false
-                                self.userProfileTableView.reloadData()
-                            }
-                            
-                        })
-                        
+                            } // success
+                        }) // main
                     }
                     
                 } catch {
