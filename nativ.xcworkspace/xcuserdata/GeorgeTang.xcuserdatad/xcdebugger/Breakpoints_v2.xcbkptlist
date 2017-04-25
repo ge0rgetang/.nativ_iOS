@@ -186,11 +186,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "nativ/FriendListViewController.swift"
-            timestampString = "514777067.489868"
+            timestampString = "514782667.811658"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "992"
-            endingLineNumber = "992"
+            startingLineNumber = "996"
+            endingLineNumber = "996"
             landmarkName = "scrollToTop()"
             landmarkType = "7">
          </BreakpointContent>
@@ -202,11 +202,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "nativ/FriendListViewController.swift"
-            timestampString = "514777067.489868"
+            timestampString = "514782667.811658"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "812"
-            endingLineNumber = "812"
+            startingLineNumber = "816"
+            endingLineNumber = "816"
             landmarkName = "scrollViewDidScroll(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -378,11 +378,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "nativ/FriendListViewController.swift"
-            timestampString = "514777067.489868"
+            timestampString = "514782667.811658"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1509"
-            endingLineNumber = "1509"
+            startingLineNumber = "1512"
+            endingLineNumber = "1512"
             landmarkName = "getFriendList()"
             landmarkType = "7">
          </BreakpointContent>
@@ -394,11 +394,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "nativ/FriendListViewController.swift"
-            timestampString = "514777067.489868"
+            timestampString = "514782667.811658"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1378"
-            endingLineNumber = "1378"
+            startingLineNumber = "1382"
+            endingLineNumber = "1382"
             landmarkName = "searchFriend()"
             landmarkType = "7">
          </BreakpointContent>

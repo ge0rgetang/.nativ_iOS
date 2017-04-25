@@ -779,16 +779,20 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
         }
         
         var users: [[String:Any]] = []
-        let segmentIndex = self.segmentedControl.selectedSegmentIndex
-        switch segmentIndex {
-        case 0:
-            users = self.chats
-        case 1:
-            users = self.friendsAddedTo
-        case 2:
-            users = self.addedMe
-        default:
-            return
+        if self.searchController.isActive {
+            users = self.userSearchResults
+        } else {
+            let segmentIndex = self.segmentedControl.selectedSegmentIndex
+            switch segmentIndex {
+            case 0:
+                users = self.chats
+            case 1:
+                users = self.friendsAddedTo
+            case 2:
+                users = self.addedMe
+            default:
+                return
+            }
         }
         
         if offset == 0 {
@@ -1447,7 +1451,6 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
             getRequest.httpMethod = "POST"
 
             let getString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&lastUserName=\(lastUserName)&size=\(size)"
-            print(getString)    
             getRequest.httpBody = getString.data(using: String.Encoding.utf8)
             
             let task = URLSession.shared.dataTask(with: getRequest as URLRequest) {
@@ -1466,7 +1469,7 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                         let status: String = parseJSON["status"] as! String
                         let message = parseJSON["message"] as! String
                         print("status: \(status), message: \(message)")
-                        print(parseJSON)
+
                         DispatchQueue.main.async(execute: {
                             self.activityView.removeFromSuperview()
                             

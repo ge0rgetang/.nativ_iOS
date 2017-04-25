@@ -4767,7 +4767,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="pI9-sz-ANr">
-                                                    <rect key="frame" x="8" y="2" width="304" height="401.5"/>
+                                                    <rect key="frame" x="8" y="6" width="304" height="401.5"/>
                                                     <subviews>
                                                         <label opaque="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tyS-YQ-oP8">
                                                             <rect key="frame" x="56" y="256" width="17" height="17"/>
@@ -4940,8 +4940,8 @@
                                             <constraints>
                                                 <constraint firstItem="pI9-sz-ANr" firstAttribute="leading" secondItem="Z8L-aY-XRN" secondAttribute="leading" constant="8" id="7Eh-J7-jAF"/>
                                                 <constraint firstAttribute="trailing" secondItem="pI9-sz-ANr" secondAttribute="trailing" constant="8" id="BaN-BJ-jpe"/>
-                                                <constraint firstAttribute="bottom" secondItem="pI9-sz-ANr" secondAttribute="bottom" constant="6" id="jMh-xV-MAI"/>
-                                                <constraint firstItem="pI9-sz-ANr" firstAttribute="top" secondItem="Z8L-aY-XRN" secondAttribute="top" constant="2" id="kch-RS-RpA"/>
+                                                <constraint firstAttribute="bottom" secondItem="pI9-sz-ANr" secondAttribute="bottom" constant="2" id="jMh-xV-MAI"/>
+                                                <constraint firstItem="pI9-sz-ANr" firstAttribute="top" secondItem="Z8L-aY-XRN" secondAttribute="top" constant="6" id="kch-RS-RpA"/>
                                             </constraints>
                                         </tableViewCellContentView>
                                         <color key="backgroundColor" red="0.94117647059999998" green="0.94117647059999998" blue="0.94117647059999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -4949,6 +4949,7 @@
                                             <outlet property="actionButton" destination="yVO-Bd-AQh" id="1yI-e7-0CD"/>
                                             <outlet property="actionSpacerLabel" destination="Mbb-aC-A95" id="PRn-K2-qqE"/>
                                             <outlet property="pointsLabel" destination="nap-5g-i1t" id="ZQX-xl-M0g"/>
+                                            <outlet property="postContentTextView" destination="lDF-4Y-B9h" id="UDP-7U-83c"/>
                                             <outlet property="postImageView" destination="Q5q-b1-rkh" id="Snr-Gf-gLP"/>
                                             <outlet property="replyCountLabel" destination="ygO-AT-gCx" id="AaK-Gg-b20"/>
                                             <outlet property="replyPicImageView" destination="R2R-cG-XOd" id="od6-9e-bFR"/>
