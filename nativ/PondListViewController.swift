@@ -728,7 +728,9 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         if segue.identifier == "fromPondListToPondMap" {
             if let pondMapViewController = segue.destination as? PondMapViewController {
                 pondMapViewController.segment = self.segment
-                pondMapViewController.locationText = self.locationText
+                if self.locationTextField.textColor != .lightGray && self.locationTextField.text != "" {
+                    pondMapViewController.locationText = self.locationTextField.text!
+                }
                 pondMapViewController.longitude = self.longitude
                 pondMapViewController.latitude = self.latitude
                 pondMapViewController.radius = self.radius
@@ -1718,7 +1720,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                         nextLastRow = maxCount - 1
                     }
                     
-                    if nextLastRow > lastRow {
+                    if nextLastRow <= lastRow {
                         nextLastRow = lastRow
                     }
                     
@@ -2155,13 +2157,19 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                     self.tagsToRemove = stringNoDotArray
                     
                     for tag in stringNoDotArray {
-                        tagRef.child(tag).queryOrdered(byChild: "longitude").queryStarting(atValue: minLong).queryEnding(atValue: maxLong).observe(.value, with: {
-                            (snapshot) -> Void in
-                            
-                            tagRef.child(tag).queryOrdered(byChild: "latitude").queryStarting(atValue: minLat).queryEnding(atValue: maxLat).observe(.value, with: { (snapshot) -> Void in
-                                self.getNewPosts()
+                        if tag != "" && !misc.checkSpecialCharacters(tag) {
+                            tagRef.child(tag).queryOrdered(byChild: "longitude").queryStarting(atValue: minLong).queryEnding(atValue: maxLong).observe(.value, with: {
+                                (snapshot) -> Void in
+                                
+                                tagRef.child(tag).queryOrdered(byChild: "latitude").queryStarting(atValue: minLat).queryEnding(atValue: maxLat).observe(.value, with: { (snapshot) -> Void in
+                                    self.getNewPosts()
+                                })
                             })
-                        })
+                        } else {
+                            self.radius = 2.5
+                            self.trendingPosts = []
+                            self.getNewPosts()
+                        }
                     }
                 }
                 
@@ -2826,7 +2834,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                 getURL = URL(string: "https://dotnative.io/getMixedPost")
                 let text = self.textView.text!
                 let tagArray = misc.stringWithoutDot(text)
-                getString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&isMine=\(isMine)&longitude=\(self.longitude)&latitude=\(self.latitude)&postID=\(postID)&sort=\(sort)&isExact=\(isExact)&size=\(picSize)&lastPostID=\(lastPostID)&pageNumber=\(pageNumber)&radius=\(self.radius)&timeDel=\(self.timeDel)"
+                getString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&isMine=\(isMine)&longitude=\(self.longitude)&latitude=\(self.latitude)&postID=\(postID)&sort=\(sort)&isExact=yes&size=\(picSize)&lastPostID=\(lastPostID)&pageNumber=\(pageNumber)&radius=2.5&timeDel=\(self.timeDel)"
                 if !tagArray.isEmpty {
                     getString.append("&locationTag=\(tagArray)")
                 }
@@ -3061,7 +3069,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                                     if !posts.isEmpty {
                                         var firstRows = 4
                                         let maxCount = posts.count
-                                        if firstRows > (maxCount - 1) {
+                                        if firstRows >= (maxCount - 1) {
                                             firstRows = maxCount - 1
                                         }
                                         
@@ -3084,7 +3092,10 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                                         self.firstLoad = false
                                         self.pondListTableView.reloadData()
                                     }
-                                } // parse dict
+                                } else {
+                                    self.firstLoad = false
+                                    self.pondListTableView.reloadData()
+                                }// parse dict
                                 
                             } // success
                         }) // main

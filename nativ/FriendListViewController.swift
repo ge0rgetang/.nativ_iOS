@@ -826,7 +826,7 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                         nextLastRow = maxCount - 1
                     }
                     
-                    if nextLastRow > lastRow {
+                    if nextLastRow <= lastRow {
                         nextLastRow = lastRow
                     }
                     
@@ -1521,7 +1521,7 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                                 if !users.isEmpty {
                                     var firstRows = 5
                                     let maxCount = users.count
-                                    if firstRows > (maxCount - 1) {
+                                    if firstRows >= (maxCount - 1) {
                                         firstRows = maxCount - 1
                                     }
                                     

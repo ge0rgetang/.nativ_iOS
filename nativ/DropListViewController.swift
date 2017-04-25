@@ -441,7 +441,7 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
                         nextLastRow = maxCount - 1
                     }
                     
-                    if nextLastRow > lastRow {
+                    if nextLastRow <= lastRow {
                         nextLastRow = lastRow
                     }
                     
@@ -871,7 +871,7 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
                                     if !posts.isEmpty {
                                         var firstRows = 8
                                         let maxCount = posts.count
-                                        if firstRows > (maxCount - 1) {
+                                        if firstRows >= (maxCount - 1) {
                                             firstRows = maxCount - 1
                                         }
                                         
@@ -894,6 +894,9 @@ class DropListViewController: UIViewController, UITableViewDelegate, UITableView
                                         self.firstLoad = false
                                         self.dropListTableView.reloadData()
                                     }
+                                } else {
+                                    self.firstLoad = false
+                                    self.dropListTableView.reloadData()
                                 } // parse dict
                                 
                             } // success

@@ -403,7 +403,7 @@ class EditPublicInfoPopViewController: UIViewController, UITextFieldDelegate, UI
                                 let alertController = UIAlertController(title: "Yay!", message: "Public info successfully changed :)", preferredStyle: .alert)
                                 let okAction = UIAlertAction(title: "Ok", style: .default) { action in
                                     self.confirmButton.isEnabled = true
-                                    NotificationCenter.default.post(name: Notification.Name(rawValue: "getMyProfile"), object: nil)
+                                    NotificationCenter.default.post(name: Notification.Name(rawValue: "addFirebaseObservers"), object: nil)
                                     NotificationCenter.default.post(name: Notification.Name(rawValue: "makeWhiteViewsWhite"), object: nil)
                                     self.dismiss(animated: true, completion: nil)
                                 }

@@ -289,7 +289,7 @@ class EditPrivateInfoPopViewController: UIViewController, UITextFieldDelegate, U
                                 let alertController = UIAlertController(title: "Yay!", message: "Private info successfully changed :)", preferredStyle: .alert)
                                 let okAction = UIAlertAction(title: "Ok", style: .default) { action in
                                     self.confirmButton.isEnabled = true
-                                    NotificationCenter.default.post(name: Notification.Name(rawValue: "getMyProfile"), object: nil)
+                                    NotificationCenter.default.post(name: Notification.Name(rawValue: "addFirebaseObservers"), object: nil)
                                     NotificationCenter.default.post(name: Notification.Name(rawValue: "makeWhiteViewsWhite"), object: nil)
                                     self.dismiss(animated: true, completion: nil)
                                 }

@@ -667,7 +667,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                         nextLastRow = maxCount - 1
                     }
                     
-                    if nextLastRow > lastRow {
+                    if nextLastRow <= lastRow {
                         nextLastRow = lastRow
                     }
                     
@@ -1481,7 +1481,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                         let status: String = parseJSON["status"] as! String
                         let message = parseJSON["message"] as! String
                         print("status: \(status), message: \(message)")
-                        print(parseJSON)    
+
                         DispatchQueue.main.async(execute: {
                             self.activityView.removeFromSuperview()
                             
@@ -1628,7 +1628,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                                     if !posts.isEmpty {
                                         var firstRows = 3
                                         let maxCount = posts.count
-                                        if firstRows > (maxCount - 1) {
+                                        if firstRows >= (maxCount - 1) {
                                             firstRows = maxCount - 1
                                         }
                                         
@@ -1654,8 +1654,11 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                                 } else {
                                     self.firstLoad = false
                                     self.userProfileTableView.reloadData()
-                                }// parse dict
+                                } // parse dict
                                 
+                            }  else {
+                                self.firstLoad = false
+                                self.userProfileTableView.reloadData()
                             } // success
                         }) // main
                     }

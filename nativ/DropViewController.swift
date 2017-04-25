@@ -753,7 +753,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         
         // prefetch images on scroll down
         let posts = self.replyPosts
-        if !posts.isEmpty {
+        if posts.count > 1 {
             if self.lastContentOffset < scrollView.contentOffset.y {
                 let visibleCells = self.dropTableView.visibleCells
                 if let lastCell = visibleCells.last {
@@ -766,7 +766,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                         nextLastRow = maxCount - 1
                     }
                     
-                    if nextLastRow > lastRow {
+                    if nextLastRow <= lastRow {
                         nextLastRow = lastRow
                     }
                     
@@ -1847,7 +1847,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                                     if !replies.isEmpty {
                                         var firstRows = 5
                                         let maxCount = replies.count
-                                        if firstRows > (maxCount - 1) {
+                                        if firstRows >= (maxCount - 1) {
                                             firstRows = maxCount - 1
                                         }
                                         
@@ -1870,6 +1870,9 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                                         self.firstLoad = false
                                         self.dropTableView.reloadData()
                                     }
+                                } else {
+                                    self.firstLoad = false
+                                    self.dropTableView.reloadData()
                                 } // parse dict
                                 
                             } // success
