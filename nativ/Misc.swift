@@ -343,7 +343,7 @@ class Misc: NSObject {
     }
     
     func getSpecialHandles() -> [String] {
-        let spec = ["georgetang", "gtang", "gtang42", "gtang43", "george", "georget", "tang", "simon", "randy", "native", "nativ"]
+        let spec = ["georgetang", "gtang", "gtang42", "gtang43", "george", "georget", "tang", "native", "nativ"]
         return spec
     }
     

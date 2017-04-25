@@ -49,6 +49,8 @@ class EditLoginInfoPopViewController: UIViewController, UITextFieldDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        self.currentEmailTextField.text = emailText
+        
         misc.makeButtonFancy(self.confirmButton, title: "Confirm", view: self.view)
         self.view.backgroundColor = .white
         
@@ -265,7 +267,6 @@ class EditLoginInfoPopViewController: UIViewController, UITextFieldDelegate {
             sendRequest.httpMethod = "POST"
             
             let sendString = "iv=\(iv)&token=\(cipherText)&action=\(action)&myID=\(self.myID)&isPicSet=\(isPicSet)&myName=\(self.nameText)&myHandle=\(self.handleText)&myDescription=\(self.descriptionText)&myEmail=\(email)&myBirthday=\(self.birthdayText)&myPhoneNumber=\(self.phoneText)"
-            
             sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
             
             let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
@@ -284,7 +285,7 @@ class EditLoginInfoPopViewController: UIViewController, UITextFieldDelegate {
                         let status: String = parseJSON["status"] as! String
                         let message = parseJSON["message"] as! String
                         print("status: \(status), message: \(message)")
-                        
+
                         DispatchQueue.main.async(execute: {
                             
                             if status == "error" {
@@ -359,7 +360,6 @@ class EditLoginInfoPopViewController: UIViewController, UITextFieldDelegate {
             sendRequest.httpMethod = "POST"
             
             let sendString = "iv=\(iv)&token=\(cipherText)&action=\(action)&myID=\(self.myID)&isPicSet=\(isPicSet)&myName=\(self.nameText)&myHandle=\(self.handleText)&myDescription=\(self.descriptionText)&myEmail=\(self.emailText)&myBirthday=\(self.birthdayText)&myPhoneNumber=\(self.phoneText)"
-            
             sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
             
             let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
@@ -378,7 +378,7 @@ class EditLoginInfoPopViewController: UIViewController, UITextFieldDelegate {
                         let status: String = parseJSON["status"] as! String
                         let message = parseJSON["message"] as! String
                         print("status: \(status), message: \(message)")
-                        
+
                         DispatchQueue.main.async(execute: {
                             self.updateLoginInfo(self.emailText)
                             

@@ -853,6 +853,18 @@ class MyProfileViewController: UIViewController, UIImagePickerControllerDelegate
                                 } catch let error as NSError {
                                     print(error)
                                 }
+                                
+                                self.myID = 0
+                                self.myIDFIR = "0000000000000000000000000000"
+                                self.myPicImageView.image = nil
+                                self.myPointsLabel.text = ""
+                                self.myHandleLabel.text = ""
+                                self.myNameLabel.text = ""
+                                self.myDescriptionLabel.text = ""
+                                self.myEmailLabel.text = ""
+                                self.myBirthdayLabel.text = ""
+                                self.myPhoneNumberLabel.text = "" 
+                                
                                 UserDefaults.standard.set(false, forKey: "isUserLoggedIn.nativ")
                                 UserDefaults.standard.removeObject(forKey: "myID.nativ")
                                 UserDefaults.standard.removeObject(forKey: "myIDFIR.nativ")

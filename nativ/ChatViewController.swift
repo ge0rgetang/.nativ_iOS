@@ -57,6 +57,7 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
     @IBOutlet weak var typingLabel: UILabel!
     @IBOutlet weak var typingLabelHeight: NSLayoutConstraint!
     @IBOutlet weak var userInputTextViewBottom: NSLayoutConstraint!
+    @IBOutlet weak var dotLabelHeight: NSLayoutConstraint!
     
     @IBOutlet weak var userInputTextView: UITextView!
     @IBOutlet weak var characterCountLabel: UILabel!
@@ -91,6 +92,7 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
         self.typingLabelView.alpha = 0
         self.typingLabel.alpha = 0
         self.typingLabelHeight.constant = 0
+        self.dotLabelHeight.constant = 0
         self.typingLabelView.layer.cornerRadius = 4.2
         
         self.chatTableView.delegate = self
@@ -151,17 +153,14 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
                     self.segmentedControl.sizeToFit()
                     self.navigationItem.title = self.userHandle
                     self.writeInConversation(true)
+                    if self.userInputTextView.text != "" && self.userInputTextView.textColor != .lightGray {
+                        self.sendButton.isEnabled = true
+                    }
                 }
                 if self.isFriend == "B" || self.isFriend == "BB" {
                     self.sendButton.isEnabled = false
                     self.userInputTextView.isUserInteractionEnabled = false
                     self.segmentedControl.isHidden = true
-                } else {
-                    self.userInputTextView.isUserInteractionEnabled = true
-                    self.segmentedControl.isHidden = true
-                    if self.userInputTextView.text != "" && self.userInputTextView.textColor != .lightGray {
-                        self.sendButton.isEnabled = true
-                    }
                 }
             }
         }
@@ -556,6 +555,7 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
                 self.typingLabelView.alpha = 1
                 self.typingLabel.alpha = 1
                 self.typingLabelHeight.constant = 32
+                self.dotLabelHeight.constant = 24
                 self.typingLabelView.layoutIfNeeded()
                 self.typingLabel.layoutIfNeeded()
                 self.chatTableView.layoutIfNeeded()
@@ -571,6 +571,7 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
                 if finished {
                     UIView.animate(withDuration: 0.25, animations: {
                         self.typingLabelHeight.constant = 0
+                        self.dotLabelHeight.constant = 0
                         self.chatTableView.layoutIfNeeded()
                     })
                 }
@@ -580,7 +581,7 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
     
     func setBackButton() {
         self.backButton.setImage(UIImage(named: "backButton"), for: .normal)
-        self.backButton.setTitle(" Chats", for: .normal)
+        self.backButton.setTitle(" Added", for: .normal)
         self.backButton.addTarget(self, action: #selector(self.unwindToFriendList), for: .touchUpInside)
         self.backButton.setTitleColor(misc.nativColor, for: .normal)
         self.backButton.sizeToFit()

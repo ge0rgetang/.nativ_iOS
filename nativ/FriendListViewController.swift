@@ -139,14 +139,6 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
         } else {
             self.searchController.searchBar.placeholder = "Search for friends/handle/email"
             self.searchController.searchBar.isUserInteractionEnabled = true
-            
-            if !self.searchController.isActive {
-                self.observeFriendList()
-                self.hideSegementedControl(false)
-            } else {
-                self.hideSegementedControl(true)
-            }
-            
             self.logViewFriendList()
             self.writeInFriendList(true)
         }
@@ -169,6 +161,12 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        if !self.searchController.isActive {
+            self.observeFriendList()
+            self.hideSegementedControl(false)
+        } else {
+            self.hideSegementedControl(true)
+        }
         self.friendListTableView.reloadData()
     }
     
@@ -198,8 +196,6 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
         self.firstLoadSearch = true
         self.clearArrays()
         misc.clearWebImageCache()
-        self.searchController.isActive = false
-        self.observeFriendList()
     }
     
     // MARK: - TableView
@@ -359,6 +355,13 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                     cell.userMessageLabel.textColor = .black
                 }
                 
+                cell.whiteView.backgroundColor = UIColor.white
+                cell.whiteView.layer.masksToBounds = false
+                cell.whiteView.layer.cornerRadius = 2.5
+                cell.whiteView.layer.shadowOffset = CGSize(width: -1, height: 1)
+                cell.whiteView.layer.shadowOpacity = 0.42
+                cell.whiteView.sizeToFit()
+                
                 let userID = individualUser["userID"] as! Int
                 if self.firstUserID != userID {
                     cell.whiteView.alpha = 0
@@ -390,6 +393,7 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                 } else {
                     cell.addButton.setImage(UIImage(named: "addFriendSelected"), for: .normal)
                 }
+                cell.addLabel.text = ""
                 
                 cell.whiteView.backgroundColor = UIColor.white
                 cell.whiteView.layer.masksToBounds = false
@@ -789,7 +793,9 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
         
         if offset == 0 {
             self.scrollPosition = "top"
-            self.observeFriendList()
+            if !self.searchController.isActive {
+                self.observeFriendList()
+            }
         } else if offset == (contentHeight - frameHeight) {
             self.scrollPosition = "bottom"
             if users.count >= 42 && !self.searchController.isActive {
@@ -984,7 +990,9 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
     
     func scrollToTop() {
         self.lastContentOffset = 0
-        self.friendListTableView.setContentOffset(.zero, animated: false)
+        if !self.searchController.isActive {
+            self.friendListTableView.setContentOffset(.zero, animated: false)
+        }
         self.scrollToTopButton.removeFromSuperview()
     }
     
@@ -1208,24 +1216,6 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                 let user: [String: Any] = ["userID": userID, "userIDFIR": userIDFIR, "isFriend": isFriend, "senderID": senderID, "userHandle": userHandle, "lastChat": lastChat, "picURL": picURL]
                 users.append(user)
             }
-            
-            if !users.isEmpty {
-                var firstRows = 8
-                let maxCount = users.count
-                if firstRows > (maxCount - 1) {
-                    firstRows = maxCount - 1
-                }
-                
-                var urlsToPrefetch: [URL] = []
-                for index in 0...firstRows {
-                    let user = users[index]
-                    if let picURL = user["picURL"] as? URL {
-                        urlsToPrefetch.append(picURL)
-                    }
-                }
-                SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch)
-            }
-
         }
         
         return users
@@ -1363,6 +1353,7 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                                 self.activityView.removeFromSuperview()
                                 
                                 if status == "error" {
+                                    self.friendListTableView.reloadData()
                                     self.displayAlert("Oops", alertMessage: "We've encountered an error and can't load search results. Please report the bug in the report section of the menu.")
                                     return
                                 }
@@ -1384,7 +1375,29 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                                         }
                                     }
                                     
-                                    self.friendListTableView.reloadData()
+                                    let users = self.userSearchResults
+                                    if !users.isEmpty {
+                                        var firstRows = 5
+                                        let maxCount = users.count
+                                        if firstRows > (maxCount - 1) {
+                                            firstRows = maxCount - 1
+                                        }
+                                        
+                                        var urlsToPrefetch: [URL] = []
+                                        for index in 0...firstRows {
+                                            let user = users[index]
+                                            if let picURL = user["picURL"] as? URL {
+                                                urlsToPrefetch.append(picURL)
+                                            }
+                                        }
+                                        
+                                        SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch, progress: nil, completed: { (completed, skipped) in
+                                            self.friendListTableView.reloadData()
+                                        })
+                                    }  else {
+                                        self.friendListTableView.reloadData()
+                                    }
+
                                 }
                             })
                         }
@@ -1407,7 +1420,6 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
     }
     
     func getFriendList() {
-        self.searchController.isActive = false
         self.newUpdatesCount = 0
         let size: String = "medium"
         var lastUserName: String = "0"
@@ -1435,7 +1447,7 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
             getRequest.httpMethod = "POST"
 
             let getString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&lastUserName=\(lastUserName)&size=\(size)"
-            
+            print(getString)    
             getRequest.httpBody = getString.data(using: String.Encoding.utf8)
             
             let task = URLSession.shared.dataTask(with: getRequest as URLRequest) {
@@ -1454,11 +1466,13 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                         let status: String = parseJSON["status"] as! String
                         let message = parseJSON["message"] as! String
                         print("status: \(status), message: \(message)")
-
+                        print(parseJSON)
                         DispatchQueue.main.async(execute: {
                             self.activityView.removeFromSuperview()
                             
                             if status == "error" {
+                                self.firstLoad = false
+                                self.friendListTableView.reloadData()
                                 self.displayAlert("Oops", alertMessage: "We've encountered an error and can't load your friends. Please report the bug in your profile if this persists.")
                                 return
                             }
@@ -1492,11 +1506,43 @@ class FriendListViewController: UIViewController, UITableViewDelegate, UITableVi
                                     }
                                 }
                                 
-                                self.firstLoad = false
-                                self.friendListTableView.reloadData()
-                            }
-                        })
-                        
+                                var users: [[String:Any]] = []
+                                switch self.segmentedControl.selectedSegmentIndex {
+                                case 0:
+                                    users = self.chats
+                                case 1:
+                                    users = self.friendsAddedTo
+                                default:
+                                    users = self.addedMe
+                                }
+                                if !users.isEmpty {
+                                    var firstRows = 5
+                                    let maxCount = users.count
+                                    if firstRows > (maxCount - 1) {
+                                        firstRows = maxCount - 1
+                                    }
+                                    
+                                    var urlsToPrefetch: [URL] = []
+                                    for index in 0...firstRows {
+                                        let user = users[index]
+                                        if let picURL = user["picURL"] as? URL {
+                                            urlsToPrefetch.append(picURL)
+                                        }
+                                    }
+                                    
+                                    SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch, progress: nil, completed: { (completed, skipped) in
+                                        self.firstLoad = false
+                                        self.friendListTableView.reloadData()
+                                    })
+                                }  else {
+                                    self.firstLoad = false
+                                    self.friendListTableView.reloadData()
+                                }
+                                
+                            } // success
+                            self.firstLoad = false
+                            self.friendListTableView.reloadData()
+                        }) // main
                     }
                     
                 } catch {

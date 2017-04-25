@@ -88,6 +88,9 @@ class ForgotPasswordPopViewController: UIViewController, UITextFieldDelegate {
                     }
                 })
             })
+        } else {
+            self.displayAlert("No Email", alertMessage: "Please enter in your email")
+            return
         }
     }
     

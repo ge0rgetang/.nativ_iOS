@@ -108,7 +108,6 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
         self.userProfileTableView.dataSource = self
         self.userProfileTableView.rowHeight = UITableViewAutomaticDimension
         self.userProfileTableView.separatorStyle = UITableViewCellSeparatorStyle.none
-        self.userProfileTableView.backgroundColor = .white
         self.userProfileTableView.showsVerticalScrollIndicator = false
         
         self.sendButton.isEnabled = false
@@ -213,64 +212,70 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
     // MARK: - TableView
     
     func numberOfSections(in tableView: UITableView) -> Int {
-        if self.isFriend == "B" || self.isFriend == "BB" || self.userInfo.isEmpty {
-            return 1
-        }
-        
-        return 2
+        return 1
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        
-        if section == 0 {
+        if self.userInfo.isEmpty {
             return 1
         }
         
-        if section == 1 && self.userPosts.isEmpty {
-            return 1
+        if !userInfo.isEmpty && self.userPosts.isEmpty {
+            return 2
         }
         
-        return self.userPosts.count
+        if self.isFriend == "B" || self.isFriend == "BB" {
+            return 2
+        }
+        
+        return self.userPosts.count + 1
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if ((self.userInfo.isEmpty || self.isFriend == "B" || self.isFriend == "BB") && indexPath.section == 0) || (self.userPosts.isEmpty && indexPath.section == 1)  {
+        if (self.userInfo.isEmpty && indexPath.row == 0) || self.isFriend == "B" || self.isFriend == "BB" || (self.userPosts.isEmpty && indexPath.row == 1) {
             let cell = tableView.dequeueReusableCell(withIdentifier: "noUserProfileCell", for: indexPath) as! NoContentTableViewCell
             cell.noContentLabel.numberOfLines = 0
             cell.noContentLabel.textColor = .lightGray
             
-            if self.firstLoad {
-                cell.noContentLabel.text = "loading profile..."
-            }
-            
-            if self.isFriend == "B" {
-                cell.noContentLabel.text = "Sorry, this person has blocked you."
-            } else if self.isFriend == "BB" {
-                cell.noContentLabel.text = "You have blocked this person."
-            } else if self.userInfo.isEmpty {
-                if self.fromHandle {
-                    cell.noContentLabel.text = "Sorry, we couldn't find this person. Please try again, and note that handles are case sensitive. Please report this bug if it persists"
+            if indexPath.row == 0 {
+                if self.firstLoad {
+                    cell.noContentLabel.text = "loading profile..."
+                } else if self.isFriend == "B" {
+                    cell.noContentLabel.text = "Sorry, this person has blocked you."
+                } else if self.isFriend == "BB" {
+                    cell.noContentLabel.text = "You have blocked this person."
                 } else {
-                    cell.noContentLabel.text = "Sorry, we broke something. Unable to see profile at this time."
+                    if self.fromHandle {
+                        cell.noContentLabel.text = "Sorry, we couldn't find this person. Please try again, and note that handles are case sensitive. Please report this bug if it persists"
+                    } else {
+                        cell.noContentLabel.text = "Sorry, we broke something. Unable to see profile at this time."
+                    }
                 }
             } else {
-                cell.noContentLabel.text = "This person has no public posts"
+                if self.firstLoad {
+                    cell.noContentLabel.text = "loading profile..."
+                } else {
+                    cell.noContentLabel.text = "This person has no public posts"
+                }
             }
             
             return cell
         }
         
-        if indexPath.section == 0 && !self.userInfo.isEmpty {
+        if indexPath.row == 0 {
             let cell = tableView.dequeueReusableCell(withIdentifier: "userInfoCell", for: indexPath) as! UserInfoTableViewCell
             
             let model = UIDevice.current.modelName
             if model.contains("iPhone") {
                 if model.lowercased().contains("plus") {
                     cell.userPicWidth.constant = 175
+                    cell.userPicHeight.constant = 175
                 } else if model.contains("6") || model.contains("7") || model.contains("8") {
                     cell.userPicWidth.constant = 150
+                    cell.userPicHeight.constant = 150
                 } else {
                     cell.userPicWidth.constant = 125
+                    cell.userPicHeight.constant = 125
                 }
             }
             
@@ -278,6 +283,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
             cell.userPicImageView.layer.cornerRadius = cell.userPicImageView.frame.size.width/2
             cell.userPicImageView.clipsToBounds = true
             cell.userPicImageView.sd_setImage(with: picURL)
+            cell.userPicImageView.layoutIfNeeded()
             
             cell.userNameLabel.text = self.userInfo["userName"] as? String
             
@@ -335,87 +341,88 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
             }
             
             return cell
-        }
-        
-        var cell: PostTableViewCell
-        let individualPost = self.userPosts[indexPath.row]
-        if let imageURL = individualPost["imageURL"] as? URL {
-            cell = tableView.dequeueReusableCell(withIdentifier: "pondUserImageCell", for: indexPath) as! PostTableViewCell
-            let placeholder = UIImage.animatedImage(with: self.loadingImageArray, duration: 0.33)
-            let block: SDExternalCompletionBlock = { (image, error, cacheType, url) -> Void in
-                cell.postImageView.image = image
-                cell.postImageView.contentMode = .scaleAspectFill
-                cell.setNeedsLayout()
-            }
-            cell.postImageView.contentMode = .scaleAspectFit
-            cell.postImageView.sd_setImage(with: imageURL, placeholderImage: placeholder, options: .progressiveDownload, completed: block)
-            let tapToViewImage = UITapGestureRecognizer(target: self, action: #selector(self.presentImage))
-            cell.postImageView.addGestureRecognizer(tapToViewImage)
+            
         } else {
-            cell = tableView.dequeueReusableCell(withIdentifier: "pondUserCell", for: indexPath) as! PostTableViewCell
-        }
-        
-        let userID = individualPost["userID"] as! Int
-        let didIVote = individualPost["didIVote"] as! String
-        if userID != self.myID {
-            cell.actionButton.setImage(UIImage(named: "upvoteUnselected"), for: .normal)
-            cell.actionButton.setImage(UIImage(named: "upvoteSelected"), for: .selected)
-            cell.actionButton.setImage(UIImage(named: "upvoteSelected"), for: .highlighted)
-            if didIVote == "yes" {
-                cell.actionButton.isSelected = true
+            var cell: PostTableViewCell
+            let individualPost = self.userPosts[indexPath.row - 1]
+            if let imageURL = individualPost["imageURL"] as? URL {
+                cell = tableView.dequeueReusableCell(withIdentifier: "pondUserImageCell", for: indexPath) as! PostTableViewCell
+                let placeholder = UIImage.animatedImage(with: self.loadingImageArray, duration: 0.33)
+                let block: SDExternalCompletionBlock = { (image, error, cacheType, url) -> Void in
+                    cell.postImageView.image = image
+                    cell.postImageView.contentMode = .scaleAspectFill
+                    cell.setNeedsLayout()
+                }
+                cell.postImageView.contentMode = .scaleAspectFit
+                cell.postImageView.sd_setImage(with: imageURL, placeholderImage: placeholder, options: .progressiveDownload, completed: block)
+                let tapToViewImage = UITapGestureRecognizer(target: self, action: #selector(self.presentImage))
+                cell.postImageView.addGestureRecognizer(tapToViewImage)
             } else {
-                cell.actionButton.isSelected = false
-                let tapSpacerToUpvote = UITapGestureRecognizer(target: self, action: #selector(self.upvotePost))
-                cell.actionSpacerLabel.addGestureRecognizer(tapSpacerToUpvote)
+                cell = tableView.dequeueReusableCell(withIdentifier: "pondUserCell", for: indexPath) as! PostTableViewCell
             }
-            cell.actionButton.isHidden = false
-            cell.actionSpacerLabel.isHidden = false
-        } else {
-            cell.actionButton.isHidden = true
-            cell.actionSpacerLabel.isHidden = false
+            
+            let userID = individualPost["userID"] as! Int
+            let didIVote = individualPost["didIVote"] as! String
+            if userID != self.myID {
+                cell.actionButton.setImage(UIImage(named: "upvoteUnselected"), for: .normal)
+                cell.actionButton.setImage(UIImage(named: "upvoteSelected"), for: .selected)
+                cell.actionButton.setImage(UIImage(named: "upvoteSelected"), for: .highlighted)
+                if didIVote == "yes" {
+                    cell.actionButton.isSelected = true
+                } else {
+                    cell.actionButton.isSelected = false
+                    let tapSpacerToUpvote = UITapGestureRecognizer(target: self, action: #selector(self.upvotePost))
+                    cell.actionSpacerLabel.addGestureRecognizer(tapSpacerToUpvote)
+                }
+                cell.actionButton.isHidden = false
+                cell.actionSpacerLabel.isHidden = false
+            } else {
+                cell.actionButton.isHidden = true
+                cell.actionSpacerLabel.isHidden = false
+            }
+            
+            cell.userPicImageView.layer.cornerRadius = cell.userPicImageView.frame.size.width/2
+            cell.userPicImageView.clipsToBounds = true
+            let picURL = individualPost["picURL"] as! URL
+            cell.userPicImageView.sd_setImage(with: picURL)
+            cell.userNameLabel.text = individualPost["userName"] as? String
+            let handle = individualPost["userHandle"] as! String
+            cell.userHandleLabel.text = "@\(handle)"
+            
+            let pointsCount = individualPost["pointsCount"] as! Int
+            cell.pointsLabel.text  = misc.setCount(pointsCount)
+            
+            let postContent = individualPost["postContent"] as! String
+            cell.postContentTextView.attributedText = misc.stringWithColoredTags(postContent, time: "default", fontSize: 18, timeSize: 18)
+            
+            cell.timestampLabel.text = individualPost["timestamp"] as? String
+            
+            let shareCount = individualPost["shareCount"] as! Int
+            cell.shareCountLabel.text = misc.setCount(shareCount)
+            let tapSpacerToShare = UITapGestureRecognizer(target: self, action: #selector(self.presentSharePostSheet))
+            cell.shareSpacerLabel.addGestureRecognizer(tapSpacerToShare)
+            
+            let replyCount = individualPost["replyCount"] as! Int
+            cell.replyCountLabel.text = misc.setCount(replyCount)
+            
+            cell.whiteView.backgroundColor = UIColor.white
+            cell.whiteView.layer.masksToBounds = false
+            cell.whiteView.layer.cornerRadius = 2.5
+            cell.whiteView.layer.shadowOffset = CGSize(width: -1, height: 1)
+            cell.whiteView.layer.shadowOpacity = 0.42
+            cell.whiteView.sizeToFit()
+            
+            let postID = individualPost["postID"] as! Int
+            if !self.postIDArray.contains(postID) {
+                cell.alpha = 0
+                UIView.animate(withDuration: 0.1, animations: {
+                    cell.alpha = 1
+                })
+                self.postIDArray.append(postID)
+            }
+            
+            return cell
         }
-        
-        cell.userPicImageView.layer.cornerRadius = cell.userPicImageView.frame.size.width/2
-        cell.userPicImageView.clipsToBounds = true
-        let picURL = individualPost["picURL"] as! URL
-        cell.userPicImageView.sd_setImage(with: picURL)
-        cell.userNameLabel.text = individualPost["userName"] as? String
-        let handle = individualPost["userHandle"] as! String
-        cell.userHandleLabel.text = "@\(handle)"
-        
-        let pointsCount = individualPost["pointsCount"] as! Int
-        cell.pointsLabel.text  = misc.setCount(pointsCount)
-        
-        let postContent = individualPost["postContent"] as! String
-        cell.postContentTextView.attributedText = misc.stringWithColoredTags(postContent, time: "default", fontSize: 18, timeSize: 18)
-        
-        cell.timestampLabel.text = individualPost["timestamp"] as? String
-        
-        let shareCount = individualPost["shareCount"] as! Int
-        cell.shareCountLabel.text = misc.setCount(shareCount)
-        let tapSpacerToShare = UITapGestureRecognizer(target: self, action: #selector(self.presentSharePostSheet))
-        cell.shareSpacerLabel.addGestureRecognizer(tapSpacerToShare)
-        
-        let replyCount = individualPost["replyCount"] as! Int
-        cell.replyCountLabel.text = misc.setCount(replyCount)
-        
-        cell.whiteView.backgroundColor = UIColor.white
-        cell.whiteView.layer.masksToBounds = false
-        cell.whiteView.layer.cornerRadius = 2.5
-        cell.whiteView.layer.shadowOffset = CGSize(width: -1, height: 1)
-        cell.whiteView.layer.shadowOpacity = 0.42
-        cell.whiteView.sizeToFit()
-        
-        let postID = individualPost["postID"] as! Int
-        if !self.postIDArray.contains(postID) {
-            cell.alpha = 0
-            UIView.animate(withDuration: 0.1, animations: {
-                cell.alpha = 1
-            })
-            self.postIDArray.append(postID)
-        }
-        
-        return cell
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
@@ -436,11 +443,11 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if !self.userPosts.isEmpty && indexPath.section == 1 {
+        if !self.userPosts.isEmpty && indexPath.row > 0 {
             let cell = tableView.cellForRow(at: indexPath) as! PostTableViewCell
             cell.replyPicImageView.isHighlighted = true
             cell.whiteView.backgroundColor = misc.nativFade
-            let individualPost = self.userPosts[indexPath.row]
+            let individualPost = self.userPosts[indexPath.row - 1]
             let postID = individualPost["postID"] as! Int
             if postID > 0 {
                 self.parentPostToPass = individualPost
@@ -477,7 +484,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
         let position = sender.location(in: self.userProfileTableView)
         let indexPath: IndexPath! = self.userProfileTableView.indexPathForRow(at: position)
         self.parentRow = indexPath.row
-        let individualPost = self.userPosts[indexPath.row]
+        let individualPost = self.userPosts[indexPath.row - 1]
         
         let postContent = individualPost["postContent"] as! String
         let timestamp = individualPost["timestamp"] as! String
@@ -490,7 +497,6 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
             self.performSegue(withIdentifier: "fromUserProfileToImage", sender: self)
         }
     }
-    
     
     func unwindToPondMap() {
         self.performSegue(withIdentifier: "unwindFromUserProfileToPondMap", sender: self)
@@ -590,25 +596,25 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
     // MARK: - EditPondParent Protocol
     
     func editPondContent(_ postContent: String, timestamp: String) {
-        self.userPosts[self.parentRow]["postContent"] = postContent
-        self.userPosts[self.parentRow]["timestamp"] = "edited \(timestamp)"
+        self.userPosts[self.parentRow - 1]["postContent"] = postContent
+        self.userPosts[self.parentRow - 1]["timestamp"] = "edited \(timestamp)"
     }
     
     func deletePondParent() {
         if self.userPosts.count == 1 {
             self.userPosts = []
         } else {
-            self.userPosts.remove(at: self.parentRow)
+            self.userPosts.remove(at: self.parentRow - 1)
         }
     }
     
     func updatePondReplyCount(_ replyCount: Int) {
-        self.userPosts[self.parentRow]["replyCount"] = replyCount
+        self.userPosts[self.parentRow - 1]["replyCount"] = replyCount
     }
     
     func updatePondPointCount(_ pointsCount: Int) {
-        self.userPosts[self.parentRow]["pointsCount"] = pointsCount
-        self.userPosts[self.parentRow]["didIVote"] = "yes"
+        self.userPosts[self.parentRow - 1]["pointsCount"] = pointsCount
+        self.userPosts[self.parentRow - 1]["didIVote"] = "yes"
     }
     
     
@@ -656,7 +662,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                     let lastRow = lastIndexPath!.row
                     var nextLastRow = lastRow + 5
                     
-                    let maxCount = posts.count
+                    let maxCount = posts.count + 1
                     if nextLastRow > (maxCount - 1) {
                         nextLastRow = maxCount - 1
                     }
@@ -667,7 +673,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                     
                     var urlsToPrefetch: [URL] = []
                     for index in lastRow...nextLastRow {
-                        let post = posts[index]
+                        let post = posts[index - 1]
                         if let picURL = post["picURL"] as? URL {
                             urlsToPrefetch.append(picURL)
                         }
@@ -1013,7 +1019,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
         let cell = self.userProfileTableView.cellForRow(at: indexPath) as! PostTableViewCell
         cell.sharePicImageView.isHighlighted = true
         
-        let individualPost = self.userPosts[indexPath.row]
+        let individualPost = self.userPosts[indexPath.row - 1]
         let postID = individualPost["postID"] as! Int
         let postContent = individualPost["postContent"] as! String
         
@@ -1032,7 +1038,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                 self.shareOnFB(cell.whiteView)
             }
             self.sharePost(postID, postContent: postContent, socialMedia: "Facebook")
-            self.userPosts[indexPath.row]["shareCount"] = newShareCount
+            self.userPosts[indexPath.row - 1]["shareCount"] = newShareCount
         })
         alertController.addAction(shareFBAction)
         
@@ -1046,7 +1052,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                 self.shareOnTwitter(cell.whiteView)
             }
             self.sharePost(postID, postContent: postContent, socialMedia: "Twitter")
-            self.userPosts[indexPath.row]["shareCount"] = newShareCount
+            self.userPosts[indexPath.row - 1]["shareCount"] = newShareCount
             
         })
         alertController.addAction(shareTwitterAction)
@@ -1131,15 +1137,15 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
         let indexPath: IndexPath! = self.userProfileTableView.indexPathForRow(at: position)
         self.parentRow = indexPath.row
         
-        let individualPost = self.userPosts[indexPath.row]
+        let individualPost = self.userPosts[indexPath.row - 1]
         let didIVote = individualPost["didIVote"] as! String
         let postID = individualPost["postID"] as! Int
         
         if didIVote == "no" && postID > 0 {
             let currentPoints = individualPost["pointsCount"] as! Int
             let newPoints = currentPoints + 1
-            self.userPosts[indexPath.row]["pointsCount"] = newPoints
-            self.userPosts[indexPath.row]["didIVote"] = "yes"
+            self.userPosts[indexPath.row - 1]["pointsCount"] = newPoints
+            self.userPosts[indexPath.row - 1]["didIVote"] = "yes"
             self.userProfileTableView.reloadRows(at: [indexPath], with: .none)
             
             let postID = individualPost["postID"] as! Int
@@ -1278,6 +1284,10 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                                         self.messageTextField.placeholder = "send \(self.userHandle) a message"
                                     }
                                 }
+                                self.messageTextField.isHidden = true
+                                self.sendButton.isHidden = true
+                                self.segmentedControl.isHidden = true
+                                self.userProfileTableViewTop.constant = 0
                                 if let cell = self.userProfileTableView.cellForRow(at: IndexPath(row: 0, section: 0)) as? UserInfoTableViewCell {
                                     cell.friendRequestButton.isSelected = false
                                 }
@@ -1361,10 +1371,28 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                                     if self.isFriend == "R" {
                                         self.logFriended()
                                         self.writeAcceptAction(self.userIDFIR)
-                                        self.displayAlert("Yay!", alertMessage: "You're now friends.")
+                                        self.displayAlert("Yay!", alertMessage: "You're now friends. You can chat now :)")
                                         cell.friendRequestButton.isEnabled = true
                                         cell.friendRequestButton.isSelected = false
                                         self.isFriend = "F"
+                                        if self.segueSender == "userProfile" {
+                                            self.segmentedControl.isHidden = false
+                                            self.segmentedControl.selectedSegmentIndex = 0
+                                            self.navigationItem.titleView = self.segmentedControl
+                                            self.segmentedControl.sizeToFit()
+                                            self.segmentedControl.addTarget(self, action: #selector(self.sortCriteriaDidChange), for: .valueChanged)
+                                            let swipeLeft: UISwipeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(self.swipeLeft))
+                                            swipeLeft.direction = .left
+                                            self.view.addGestureRecognizer(swipeLeft)
+                                        } else {
+                                            self.messageTextField.isHidden = false
+                                            self.sendButton.isHidden = false
+                                            self.userProfileTableViewTop.constant = 46
+                                            self.messageTextField.delegate = self
+                                            self.messageTextField.placeholder = "send \(self.userHandle) a message"
+                                            self.chatID = self.misc.setChatID(self.myID, userID: self.userID)
+                                        }
+                                        
                                     } else {
                                         self.logAdded()
                                         self.writeRequestAction(self.userIDFIR)
@@ -1453,7 +1481,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                         let status: String = parseJSON["status"] as! String
                         let message = parseJSON["message"] as! String
                         print("status: \(status), message: \(message)")
-
+                        print(parseJSON)    
                         DispatchQueue.main.async(execute: {
                             self.activityView.removeFromSuperview()
                             
@@ -1465,11 +1493,9 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                             }
                             
                             if status == "success" {
-                                if self.firstLoad {
-                                    self.userIDFIR = parseJSON["firebaseID"] as! String
-                                    self.userID = parseJSON["userID"] as! Int
-                                    self.chatID = self.misc.setChatID(self.myID, userID: self.userID)
-                                }
+                                self.userIDFIR = parseJSON["firebaseID"] as! String
+                                self.userID = parseJSON["userID"] as! Int
+                                self.chatID = self.misc.setChatID(self.myID, userID: self.userID)
                                 
                                 let isFriend = parseJSON["isFriend"] as! String
                                 self.isFriend = isFriend
@@ -1573,7 +1599,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                                             SDWebImagePrefetcher.shared().prefetchURLs([picURL])
                                         }
                                         
-                                        var post: [String:Any] = ["postID": postID, "userID": userID, "userIDFIR": userIDFIR, "userName": userName, "userHandle": userHandle, "postContent": postContent, "timestamp": timestamp, "replyCount": replyCount, "pointsCount": pointsCount, "didIVote": didIVote, "picURL": picURL, "shareCount": shareCount, "longitude": longitude, "latitude": latitude, "picURL": picURL]
+                                        var post: [String:Any] = ["postID": postID, "userID": userID, "userIDFIR": userIDFIR, "userName": userName, "userHandle": userHandle, "postContent": postContent, "timestamp": timestamp, "replyCount": replyCount, "pointsCount": pointsCount, "didIVote": didIVote, "picURL": picURL, "shareCount": shareCount, "longitude": longitude, "latitude": latitude]
                                         if !imageKey.contains("default") {
                                             let imageURL = URL(string: "https://\(imageBucket).s3.amazonaws.com/\(imageKey)")!
                                             if !self.urlArray.contains(imageURL) {
@@ -1612,27 +1638,23 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                                             if let picURL = post["picURL"] as? URL {
                                                 urlsToPrefetch.append(picURL)
                                             }
-                                            if let imageURL = post["imageURL"] as? URL {
-                                                urlsToPrefetch.append(imageURL)
+                                            if let picURL = post["imageURL"] as? URL {
+                                                urlsToPrefetch.append(picURL)
                                             }
                                         }
                                         
-                                        if self.firstLoad {
-                                            SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch, progress: nil, completed: { (completed, skipped) in
-                                                self.firstLoad = false
-                                                self.userProfileTableView.reloadData()
-                                            })
-                                        } else {
-                                            SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch)
+                                        SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch, progress: nil, completed: { (completed, skipped) in
                                             self.firstLoad = false
                                             self.userProfileTableView.reloadData()
-                                        }
-                                        
+                                        })
                                     }  else {
                                         self.firstLoad = false
                                         self.userProfileTableView.reloadData()
                                     }
-                                } // parse dict
+                                } else {
+                                    self.firstLoad = false
+                                    self.userProfileTableView.reloadData()
+                                }// parse dict
                                 
                             } // success
                         }) // main

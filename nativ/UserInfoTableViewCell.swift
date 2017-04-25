@@ -21,6 +21,7 @@ class UserInfoTableViewCell: UITableViewCell {
     @IBOutlet weak var userDescriptionLabel: UILabel!
     
     @IBOutlet weak var userPicWidth: NSLayoutConstraint!
+    @IBOutlet weak var userPicHeight: NSLayoutConstraint!
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -28,6 +29,11 @@ class UserInfoTableViewCell: UITableViewCell {
     
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
+    }
+    
+    override func layoutSubviews() {
+        self.userPicImageView.layer.cornerRadius = self.userPicWidth.constant/2
+        self.userPicImageView.clipsToBounds = true 
     }
     
 }

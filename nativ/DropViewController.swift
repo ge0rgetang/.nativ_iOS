@@ -193,7 +193,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             return 1
         }
         
-        if self.replyPosts.count == 1 {
+        if self.replyPosts.count == 1 || (!self.parentPost.isEmpty && self.replyPosts.isEmpty) {
             return 2
         }
         
@@ -312,7 +312,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             return cell
         }
         
-        if self.replyPosts.count == 1 && indexPath.row == 1 {
+        if (self.replyPosts.isEmpty || self.replyPosts.count == 1) && indexPath.row == 1 {
             let cell = tableView.dequeueReusableCell(withIdentifier: "anonReplyCell", for: indexPath) as! PostTableViewCell
             cell.postContentTextView.textColor = .lightGray
             if self.firstLoad {
@@ -508,6 +508,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
     }
     
     func presentParentOptions() {
+        self.settingsButton.isSelected = true
         let individualPost = self.parentPost
         let userID = self.parentPost["userID"] as! Int
         
@@ -553,12 +554,14 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                 self.removeObserverForReplies()
                 cell.backgroundColor = .white
                 self.isEditingPost = true
+                self.settingsButton.isSelected = false
                 self.present(editPostPopViewController, animated: true, completion: nil)
             })
             alertController.addAction(editAction)
             
             let deleteAction = UIAlertAction(title: "Delete", style: .default, handler: { action in
-                cell.whiteView.backgroundColor = .white
+                cell.backgroundColor = .white
+                self.settingsButton.isSelected = false
                 self.deleteParentPost()
             })
             alertController.addAction(deleteAction)
@@ -567,12 +570,14 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         if let imageURL = individualPost["imageURL"] as? URL {
             let shareFBAction = UIAlertAction(title: "Share on Facebook", style: .default, handler: { action in
                 cell.backgroundColor = .white
+                self.settingsButton.isSelected = false
                 self.sharePhotoFB(imageURL)
             })
             alertController.addAction(shareFBAction)
             
             let shareTwitterAction = UIAlertAction(title: "Share on Twitter", style: .default, handler: { action in
                 cell.backgroundColor = .white
+                self.settingsButton.isSelected = false
                 self.sharePhotoTwitter(imageURL)
             })
             alertController.addAction(shareTwitterAction)
@@ -580,12 +585,14 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         } else {
             let shareFBAction = UIAlertAction(title: "Share on Facebook", style: .default, handler: { action in
                 cell.backgroundColor = .white
+                self.settingsButton.isSelected = false
                 self.shareOnFB(cell.contentView)
             })
             alertController.addAction(shareFBAction)
             
             let shareTwitterAction = UIAlertAction(title: "Share on Twitter", style: .default, handler: { action in
                 cell.backgroundColor = .white
+                self.settingsButton.isSelected = false
                 self.shareOnTwitter(cell.contentView)
             })
             alertController.addAction(shareTwitterAction)
@@ -594,12 +601,14 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         let reportAction = UIAlertAction(title: "Report", style: .default, handler: { action in
             self.removeObserverForReplies()
             cell.backgroundColor = .white
+            self.settingsButton.isSelected = false
             self.present(reportPopViewController, animated: true, completion: nil)
         })
         alertController.addAction(reportAction)
         
         alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { action in
             cell.backgroundColor = .white
+            self.settingsButton.isSelected = false
         })
         )
         
@@ -1853,17 +1862,10 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                                             }
                                         }
                                         
-                                        if self.firstLoad {
-                                            SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch, progress: nil, completed: { (completed, skipped) in
-                                                self.firstLoad = false
-                                                self.dropTableView.reloadData()
-                                            })
-                                        } else {
-                                            SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch)
+                                        SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch, progress: nil, completed: { (completed, skipped) in
                                             self.firstLoad = false
                                             self.dropTableView.reloadData()
-                                        }
-                                        
+                                        })
                                     }  else {
                                         self.firstLoad = false
                                         self.dropTableView.reloadData()

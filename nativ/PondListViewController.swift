@@ -3076,17 +3076,10 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                                             }
                                         }
                                         
-                                        if self.firstLoad {
-                                            SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch, progress: nil, completed: { (completed, skipped) in
-                                                self.firstLoad = false
-                                                self.pondListTableView.reloadData()
-                                            })
-                                        } else {
-                                            SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch)
+                                        SDWebImagePrefetcher.shared().prefetchURLs(urlsToPrefetch, progress: nil, completed: { (completed, skipped) in
                                             self.firstLoad = false
                                             self.pondListTableView.reloadData()
-                                        }
-                                        
+                                        })
                                     } else {
                                         self.firstLoad = false
                                         self.pondListTableView.reloadData()

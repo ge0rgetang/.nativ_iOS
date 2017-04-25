@@ -248,7 +248,7 @@ class SignUpViewController: UIViewController, UITextFieldDelegate, UIImagePicker
         self.present(alertController, animated: true, completion: nil)
     }
     
-    // MARK: T- extField
+    // MARK: - TextField
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
@@ -506,22 +506,22 @@ class SignUpViewController: UIViewController, UITextFieldDelegate, UIImagePicker
         switch size {
         case "small":
             if sourceWidth > sourceHeight {
-                scaleFactor = 160/sourceWidth
+                scaleFactor = 150/sourceWidth
             } else {
-                scaleFactor = 160/sourceHeight
+                scaleFactor = 150/sourceHeight
             }
         case "medium":
             if sourceWidth > sourceHeight {
-                scaleFactor = 300/sourceWidth
+                scaleFactor = 250/sourceWidth
             } else {
-                scaleFactor = 300/sourceHeight
+                scaleFactor = 250/sourceHeight
             }
             
         default:
             if sourceWidth > sourceHeight {
-                scaleFactor = 600/sourceWidth
+                scaleFactor = 500/sourceWidth
             } else {
-                scaleFactor = 600/sourceHeight
+                scaleFactor = 500/sourceHeight
             }
         }
         
