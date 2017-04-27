@@ -122,12 +122,13 @@ class AboutViewController: UIViewController, UIPopoverPresentationControllerDele
         if let sideMenuNavigationController = storyboard?.instantiateViewController(withIdentifier: "SideMenuNavigationController") as? UISideMenuNavigationController {
             sideMenuNavigationController.leftSide = true
             SideMenuManager.menuLeftNavigationController = sideMenuNavigationController
+            SideMenuManager.menuRightNavigationController = nil
             SideMenuManager.menuPresentMode = .menuSlideIn
             SideMenuManager.menuAnimationBackgroundColor = misc.nativSideMenu
             SideMenuManager.menuAnimationFadeStrength = 0.35
             SideMenuManager.menuAnimationTransformScaleFactor = 0.95
             SideMenuManager.menuAddPanGestureToPresent(toView: self.navigationController!.navigationBar)
-            SideMenuManager.menuAddScreenEdgePanGesturesToPresent(toView: self.navigationController!.view)
+            SideMenuManager.menuAddScreenEdgePanGesturesToPresent(toView: self.navigationController!.view, forMenu: UIRectEdge.left)
         }
     }
     

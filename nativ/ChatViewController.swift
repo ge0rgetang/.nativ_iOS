@@ -87,6 +87,7 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
             let swipeRight: UISwipeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(self.swipeRight))
             swipeRight.direction = .right
             self.chatTableView.addGestureRecognizer(swipeRight)
+            swipeRight.cancelsTouchesInView = false
         }
         
         self.typingLabelView.alpha = 0

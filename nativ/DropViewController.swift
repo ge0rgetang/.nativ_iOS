@@ -269,6 +269,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                 } else {
                     cell = tableView.dequeueReusableCell(withIdentifier: "anonHeaderCell") as! PostTableViewCell
                 }
+                cell.contentView.backgroundColor = .white
                 cell.postContentTextView.attributedText = misc.anonStringWithColoredTags(postContent, time: "default", fontSize: 18, timeSize: 18)
             }
             
@@ -290,6 +291,8 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                 cell.actionSpacerLabel.isHidden = false
             }
             
+            cell.contentView.backgroundColor = .white
+
             let tapWord = UITapGestureRecognizer(target: self, action: #selector(self.textViewTapped))
             cell.postContentTextView.addGestureRecognizer(tapWord)
             
@@ -395,21 +398,20 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         
         if indexPath.row == 0 {
             if let cell = tableView.cellForRow(at: indexPath) as? PostTableViewCell {
-                cell.backgroundColor = misc.nativFade
+                cell.contentView.backgroundColor = misc.nativFade
                 self.presentParentOptions()
             }
         }
         
-        if self.myID > 0 && self.myIDFIR != "0000000000000000000000000000" {
-            if !self.replyPosts.isEmpty && !self.isKeyboardUp {
+        if !self.replyPosts.isEmpty && !self.isKeyboardUp {
+            if let cell = tableView.cellForRow(at: indexPath) as? PostTableViewCell {
+                cell.contentView.backgroundColor = misc.nativFade
+                self.presentReplyOptions(indexPath)
+            }
+        } else {
+            if self.myID > 0 && self.myIDFIR != "0000000000000000000000000000" {
                 if let cell = tableView.cellForRow(at: indexPath) as? PostTableViewCell {
-                    cell.backgroundColor = misc.nativFade
-                    self.presentReplyOptions(indexPath)
-                }
-                
-            } else {
-                if let cell = tableView.cellForRow(at: indexPath) as? PostTableViewCell {
-                    cell.backgroundColor = misc.nativFade
+                    cell.contentView.backgroundColor = misc.nativFade
                     self.textView.becomeFirstResponder()
                 }
             }
@@ -510,18 +512,20 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
     func presentParentOptions() {
         self.settingsButton.isSelected = true
         let individualPost = self.parentPost
-        let userID = self.parentPost["userID"] as! Int
+        let userID = individualPost["userID"] as! Int
+        let userIDFIR = individualPost["userIDFIR"] as! String
+        let postContent = individualPost["postContent"] as! String
         
         let cell = self.dropTableView.cellForRow(at: IndexPath(row: 0, section: 0)) as! PostTableViewCell
 //        let cell = header?.contentView as! PostTableViewCell
-        cell.backgroundColor = misc.nativFade
+        cell.contentView.backgroundColor = misc.nativFade
         
         let editPostPopViewController = storyboard?.instantiateViewController(withIdentifier: "EditPostPopViewController") as! EditPostPopViewController
         editPostPopViewController.modalPresentationStyle = .popover
         editPostPopViewController.editPostDelegate = self
         editPostPopViewController.preferredContentSize = CGSize(width: 320, height: 75)
         editPostPopViewController.postID = self.postID
-        editPostPopViewController.postContent = individualPost["postContent"] as! String
+        editPostPopViewController.postContent = postContent
         if self.isAnon {
             editPostPopViewController.postType = "anon"
         } else {
@@ -536,7 +540,10 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         
         let reportPopViewController = storyboard?.instantiateViewController(withIdentifier: "ReportPopViewController") as! ReportPopViewController
         reportPopViewController.modalPresentationStyle = .popover
-        reportPopViewController.preferredContentSize = CGSize(width: 200, height: 150)
+        reportPopViewController.preferredContentSize = CGSize(width: 200, height: 200)
+        reportPopViewController.userID = userID
+        reportPopViewController.userIDFIR = userIDFIR
+        reportPopViewController.postContent = postContent 
         reportPopViewController.postID = self.postID
         if self.isAnon {
             reportPopViewController.postType = "anon"
@@ -545,6 +552,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         }
         if let reportPopoverController = reportPopViewController.popoverPresentationController {
             reportPopoverController.delegate = self
+            reportPopoverController.barButtonItem = self.settingsBarButton
         }
         
         let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
@@ -552,7 +560,6 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         if self.myID == userID {
             let editAction = UIAlertAction(title: "Edit", style: .default, handler: { action in
                 self.removeObserverForReplies()
-                cell.backgroundColor = .white
                 self.isEditingPost = true
                 self.settingsButton.isSelected = false
                 self.present(editPostPopViewController, animated: true, completion: nil)
@@ -560,54 +567,53 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             alertController.addAction(editAction)
             
             let deleteAction = UIAlertAction(title: "Delete", style: .default, handler: { action in
-                cell.backgroundColor = .white
                 self.settingsButton.isSelected = false
                 self.deleteParentPost()
             })
             alertController.addAction(deleteAction)
         }
         
-        if let imageURL = individualPost["imageURL"] as? URL {
-            let shareFBAction = UIAlertAction(title: "Share on Facebook", style: .default, handler: { action in
-                cell.backgroundColor = .white
-                self.settingsButton.isSelected = false
-                self.sharePhotoFB(imageURL)
-            })
-            alertController.addAction(shareFBAction)
-            
-            let shareTwitterAction = UIAlertAction(title: "Share on Twitter", style: .default, handler: { action in
-                cell.backgroundColor = .white
-                self.settingsButton.isSelected = false
-                self.sharePhotoTwitter(imageURL)
-            })
-            alertController.addAction(shareTwitterAction)
-            
-        } else {
-            let shareFBAction = UIAlertAction(title: "Share on Facebook", style: .default, handler: { action in
-                cell.backgroundColor = .white
-                self.settingsButton.isSelected = false
-                self.shareOnFB(cell.contentView)
-            })
-            alertController.addAction(shareFBAction)
-            
-            let shareTwitterAction = UIAlertAction(title: "Share on Twitter", style: .default, handler: { action in
-                cell.backgroundColor = .white
-                self.settingsButton.isSelected = false
-                self.shareOnTwitter(cell.contentView)
-            })
-            alertController.addAction(shareTwitterAction)
+        if self.myID > 0 {
+            if let imageURL = individualPost["imageURL"] as? URL {
+                let shareFBAction = UIAlertAction(title: "Share on Facebook", style: .default, handler: { action in
+                    cell.contentView.backgroundColor = .white
+                    self.settingsButton.isSelected = false
+                    self.sharePhotoFB(imageURL)
+                })
+                alertController.addAction(shareFBAction)
+                
+                let shareTwitterAction = UIAlertAction(title: "Share on Twitter", style: .default, handler: { action in
+                    cell.contentView.backgroundColor = .white
+                    self.settingsButton.isSelected = false
+                    self.sharePhotoTwitter(imageURL)
+                })
+                alertController.addAction(shareTwitterAction)
+                
+            } else {
+                let shareFBAction = UIAlertAction(title: "Share on Facebook", style: .default, handler: { action in
+                    cell.contentView.backgroundColor = .white
+                    self.settingsButton.isSelected = false
+                    self.shareOnFB(cell.contentView)
+                })
+                alertController.addAction(shareFBAction)
+                
+                let shareTwitterAction = UIAlertAction(title: "Share on Twitter", style: .default, handler: { action in
+                    cell.contentView.backgroundColor = .white
+                    self.settingsButton.isSelected = false
+                    self.shareOnTwitter(cell.contentView)
+                })
+                alertController.addAction(shareTwitterAction)
+            }
         }
         
         let reportAction = UIAlertAction(title: "Report", style: .default, handler: { action in
             self.removeObserverForReplies()
-            cell.backgroundColor = .white
-            self.settingsButton.isSelected = false
             self.present(reportPopViewController, animated: true, completion: nil)
         })
         alertController.addAction(reportAction)
         
         alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { action in
-            cell.backgroundColor = .white
+            cell.contentView.backgroundColor = .white
             self.settingsButton.isSelected = false
         })
         )
@@ -624,6 +630,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         let postSubID = individualPost["postID"] as! Int
         let postContent = individualPost["postContent"] as! String
         let userID = individualPost["userID"] as! Int
+        let userIDFIR = individualPost["userIDFIR"] as! String
         
         if postSubID > 0 {
             let editPostPopViewController = storyboard?.instantiateViewController(withIdentifier: "EditPostPopViewController") as! EditPostPopViewController
@@ -647,7 +654,10 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             
             let reportPopViewController = storyboard?.instantiateViewController(withIdentifier: "ReportPopViewController") as! ReportPopViewController
             reportPopViewController.modalPresentationStyle = .popover
-            reportPopViewController.preferredContentSize = CGSize(width: 200, height: 150)
+            reportPopViewController.userID = userID
+            reportPopViewController.userIDFIR = userIDFIR
+            reportPopViewController.postContent = postContent 
+            reportPopViewController.preferredContentSize = CGSize(width: 200, height: 200)
             reportPopViewController.postID = postSubID
             if self.isAnon {
                 reportPopViewController.postType = "anon"
@@ -664,7 +674,6 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             
             let reportAction = UIAlertAction(title: "Report", style: .default, handler: { action in
                 self.removeObserverForReplies()
-                cell.backgroundColor = .white
                 self.present(reportPopViewController, animated: true, completion: nil)
             })
             alertController.addAction(reportAction)
@@ -672,21 +681,21 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             if self.myID == userID {
                 let editAction = UIAlertAction(title: "Edit", style: .default, handler: { action in
                     self.removeObserverForReplies()
-                    cell.backgroundColor = .white
+                    cell.contentView.backgroundColor = .white
                     self.isEditingPost = true
                     self.present(editPostPopViewController, animated: true, completion: nil)
                 })
                 alertController.addAction(editAction)
                 
                 let deleteAction = UIAlertAction(title: "Delete", style: .default, handler: { action in
-                    cell.backgroundColor = .white
+                    cell.contentView.backgroundColor = .white
                     self.deleteReply()
                 })
                 alertController.addAction(deleteAction)
             }
             
             alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { action in
-                cell.backgroundColor = .white
+                cell.contentView.backgroundColor = .white
             })
             )
             
@@ -694,6 +703,11 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             DispatchQueue.main.async(execute: { self.present(alertController, animated: true, completion: nil)
             })
         }
+    }
+    
+    func refreshView() {
+        self.settingsButton.isSelected = false
+        self.dropTableView.reloadData()
     }
     
     // MARK: - EditPostProtocol (Popover)
@@ -717,7 +731,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
     }
     
     func popoverPresentationControllerDidDismissPopover(_ popoverPresentationController: UIPopoverPresentationController) {
-        
+        self.settingsButton.isSelected = false
         self.dropTableView.reloadData()
         self.isEditingPost = false
         self.observeReplies()
@@ -836,7 +850,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         
         if self.replyPosts.isEmpty {
             if let cell = self.dropTableView.cellForRow(at: IndexPath(row: 0, section: 0)) as? NoContentTableViewCell {
-                cell.backgroundColor = .white
+                cell.contentView.backgroundColor = .white
             }
         }
     }
@@ -883,21 +897,22 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                 } else {
                     if indexPath.row == 0 {
                         if let cell = self.dropTableView.cellForRow(at: indexPath) as? PostTableViewCell {
-                            cell.backgroundColor = misc.nativFade
+                            cell.contentView.backgroundColor = misc.nativFade
                             self.presentParentOptions()
                         }
                     }
                     
-                    if self.myID > 0 && self.myIDFIR != "0000000000000000000000000000" {
-                        if !self.replyPosts.isEmpty && !self.isKeyboardUp {
-                            if let cell = dropTableView.cellForRow(at: indexPath) as? PostTableViewCell {
-                                cell.backgroundColor = misc.nativFade
-                                self.presentReplyOptions(indexPath)
-                            }
+                    if !self.replyPosts.isEmpty && !self.isKeyboardUp {
+                        if let cell = dropTableView.cellForRow(at: indexPath) as? PostTableViewCell {
+                            cell.contentView.backgroundColor = misc.nativFade
+                            self.presentReplyOptions(indexPath)
+                        }
+                        
+                    } else {
+                        if self.myID > 0 && self.myIDFIR != "0000000000000000000000000000" {
                             
-                        } else {
                             if let cell = dropTableView.cellForRow(at: indexPath) as? PostTableViewCell {
-                                cell.backgroundColor = misc.nativFade
+                                cell.contentView.backgroundColor = misc.nativFade
                                 self.textView.becomeFirstResponder()
                             }
                         }
@@ -959,7 +974,8 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
         NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardDidHide(_:)), name: NSNotification.Name.UIKeyboardDidHide, object: nil)
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.unwindToHome), name: NSNotification.Name(rawValue: "unwindToHome"), object: nil)
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(self.refreshView), name: NSNotification.Name(rawValue: "unselectSettings"), object: nil)
+
         NotificationCenter.default.addObserver(self, selector: #selector(self.refreshWithDelay), name: NSNotification.Name(rawValue: "getDrop"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.removeObserverForReplies), name: NSNotification.Name(rawValue: "removeFirebaseObservers"), object: nil)
     }
@@ -1355,6 +1371,9 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             alertController.view.tintColor = misc.nativColor
             DispatchQueue.main.async(execute: { self.present(alertController, animated: true, completion: nil)
             })
+        } else {
+            self.displayAlert("Need to Sign In", alertMessage: "In order to share, you need to be signed into an account.")
+            return
         }
     }
     

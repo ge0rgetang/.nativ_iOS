@@ -15,8 +15,13 @@ class ReportPopViewController: UIViewController, UITableViewDelegate, UITableVie
 
     // MARK: - Outlets/Variables
     
-    var myID: Int = UserDefaults.standard.integer(forKey: "myID.nativ")
-    var myIDFIR: String = UserDefaults.standard.string(forKey: "myIDFIR.nativ")!
+    var myID: Int = 0
+    var myIDFIR: String = "0000000000000000000000000000"
+    
+    var userID: Int = 0
+    var userIDFIR: String = "0000000000000000000000000000"
+    var postContent: String = "reported"
+    
     var postID: Int = -2
     var postType: String = "pond"
     
@@ -34,7 +39,7 @@ class ReportPopViewController: UIViewController, UITableViewDelegate, UITableVie
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.preferredContentSize = CGSize(width: 200, height: 150)
+        self.preferredContentSize = CGSize(width: 200, height: 200)
         
         self.reportTableView.delegate = self
         self.reportTableView.dataSource = self
@@ -61,9 +66,8 @@ class ReportPopViewController: UIViewController, UITableViewDelegate, UITableVie
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        self.reportHeightArray.remove(at: self.reportHeightArray.count - 1)
         let preferredHeight = self.reportHeightArray.reduce(0,+)
-        self.preferredContentSize = CGSize(width: 200, height: preferredHeight)
+        self.preferredContentSize = CGSize(width: 200, height: preferredHeight + 10)
     }
     
     override func didReceiveMemoryWarning() {
@@ -82,10 +86,11 @@ class ReportPopViewController: UIViewController, UITableViewDelegate, UITableVie
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "reportCell", for: indexPath) as! ReportTableViewCell
+        cell.contentView.backgroundColor = .white
         cell.reportOptionLabel.numberOfLines = 0
         cell.reportOptionLabel.sizeToFit()
         cell.layoutMargins = UIEdgeInsets.zero
-        cell.reportOptionLabel.text = self.reportOptions[(indexPath as NSIndexPath).row]
+        cell.reportOptionLabel.text = self.reportOptions[indexPath.row]
         return cell
     }
     
@@ -95,6 +100,8 @@ class ReportPopViewController: UIViewController, UITableViewDelegate, UITableVie
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let cell = tableView.cellForRow(at: indexPath) as! ReportTableViewCell
+        cell.contentView.backgroundColor = misc.nativFade
         switch indexPath.row {
         case 0:
             self.reportPost("Offensive")
@@ -158,7 +165,7 @@ class ReportPopViewController: UIViewController, UITableViewDelegate, UITableVie
     // MARK: - Firebase
     
     func reportPostFIR(_ message: String) {
-        self.ref.child("reported").childByAutoId().setValue(["postID": self.postID, "myIDFIR": self.postType, "message": message])
+        self.ref.child("reported").childByAutoId().setValue(["myID": self.myID, "myIDFIR": self.myIDFIR, "postID": self.postID, "postType": self.postType, "message": message, "postContent": self.postContent, "userID": self.userID, "userIDFIR": self.userIDFIR])
     }
     
     // MARK: - AWS
@@ -180,7 +187,6 @@ class ReportPopViewController: UIViewController, UITableViewDelegate, UITableVie
             let action: String = "report"
             
             let sendString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&postID=\(self.postID)&action=\(action)&postType=\(self.postType)&reportReason=\(reportMessage)"
-            
             sendRequest.httpBody = sendString.data(using: String.Encoding.utf8)
             
             let task = URLSession.shared.dataTask(with: sendRequest as URLRequest) {
@@ -199,7 +205,7 @@ class ReportPopViewController: UIViewController, UITableViewDelegate, UITableVie
                         let status: String = parseJSON["status"] as! String
                         let message = parseJSON["message"] as! String
                         print("status: \(status), message: \(message)")
-                        
+                       
                         DispatchQueue.main.async(execute: {
                             
                             if status == "error" {
@@ -211,16 +217,8 @@ class ReportPopViewController: UIViewController, UITableViewDelegate, UITableVie
                                 self.reportPostFIR(reportMessage)
                                 let alertController = UIAlertController(title: "Thank you", message: "Report complete. We will look into the issue. Unfortunately, not everyone is awesome - don't let it ruin your day!", preferredStyle: .alert)
                                 let okAction = UIAlertAction(title: "Ok", style: .default) { action in
-                                    switch self.postType {
-                                    case "pond":
-                                        self.logPondPostReported(reportMessage)
-                                        NotificationCenter.default.post(name: Notification.Name(rawValue: "unselectSettingsPond"), object: nil)
-                                    case "anon":
-                                        self.logAnonymousPondPostReported(reportMessage)
-                                        NotificationCenter.default.post(name: Notification.Name(rawValue: "unselectSettingsPond"), object: nil)
-                                    default:
-                                        return
-                                    }
+                                    NotificationCenter.default.post(name: Notification.Name(rawValue: "unselectSettings"), object: nil)
+                                    self.reportTableView.reloadData()
                                     self.dismiss(animated: true, completion: nil)
                                 }
                                 alertController.addAction(okAction)

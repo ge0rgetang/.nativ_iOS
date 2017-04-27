@@ -15,8 +15,9 @@ class EditPostPopViewController: UIViewController, UITextViewDelegate {
 
     // MARK: - Outlets/Variables
     
-    var myID: Int = UserDefaults.standard.integer(forKey: "myID.nativ")
-    var myIDFIR: String = UserDefaults.standard.string(forKey: "myIDFIR.nativ")!
+    var myID: Int = 0
+    var myIDFIR: String = "0000000000000000000000000000"
+    
     var userIDFIR: String = "-2"
     var postID: Int = -2
     var postSubID: Int = -2
@@ -269,6 +270,7 @@ class EditPostPopViewController: UIViewController, UITextViewDelegate {
         
         self.editPostFIR(newContent!)
         self.editPostDelegate?.updatePost(newContent!)
+        NotificationCenter.default.post(name: Notification.Name(rawValue: "unselectSettings"), object: nil)
         self.dismiss(animated: true, completion: nil)
         
         let token = misc.generateToken(16, firebaseID: self.myIDFIR)

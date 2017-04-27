@@ -94,6 +94,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
             let swipeLeft: UISwipeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(self.swipeLeft))
             swipeLeft.direction = .left
             self.view.addGestureRecognizer(swipeLeft)
+            swipeLeft.cancelsTouchesInView = false
         }
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(self.dismissKeyboard))

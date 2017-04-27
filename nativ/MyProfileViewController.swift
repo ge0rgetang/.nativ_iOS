@@ -300,12 +300,13 @@ class MyProfileViewController: UIViewController, UIImagePickerControllerDelegate
         if let sideMenuNavigationController = storyboard?.instantiateViewController(withIdentifier: "SideMenuNavigationController") as? UISideMenuNavigationController {
             sideMenuNavigationController.leftSide = true
             SideMenuManager.menuLeftNavigationController = sideMenuNavigationController
+            SideMenuManager.menuRightNavigationController = nil
             SideMenuManager.menuPresentMode = .menuSlideIn
             SideMenuManager.menuAnimationBackgroundColor = misc.nativSideMenu
             SideMenuManager.menuAnimationFadeStrength = 0.35
             SideMenuManager.menuAnimationTransformScaleFactor = 0.95
             SideMenuManager.menuAddPanGestureToPresent(toView: self.navigationController!.navigationBar)
-            SideMenuManager.menuAddScreenEdgePanGesturesToPresent(toView: self.navigationController!.view)
+            SideMenuManager.menuAddScreenEdgePanGesturesToPresent(toView: self.navigationController!.view, forMenu: UIRectEdge.left)
         }
     }
     
@@ -706,7 +707,7 @@ class MyProfileViewController: UIViewController, UIImagePickerControllerDelegate
             
             let getString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&size=\(picSize)"
             getRequest.httpBody = getString.data(using: String.Encoding.utf8)
-            
+
             let task = URLSession.shared.dataTask(with: getRequest as URLRequest) {
                 (data, response, error) in
                 
@@ -766,7 +767,7 @@ class MyProfileViewController: UIViewController, UIImagePickerControllerDelegate
                                     self.myPhoneNumberLabel.text = "No phone number set"
                                     self.myPhoneNumberToPass = "No phone number set"
                                 } else {
-                                    self.myPhoneNumberLabel.text = myPhoneNumber
+                                    self.myPhoneNumberLabel.text = self.misc.formatPhoneNumber(myPhoneNumber)
                                     self.myPhoneNumberToPass = myPhoneNumber.trimSpace()
                                 }
                                 

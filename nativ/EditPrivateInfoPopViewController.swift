@@ -122,6 +122,9 @@ class EditPrivateInfoPopViewController: UIViewController, UITextFieldDelegate, U
     // MARK: - TextField
     
     func textFieldDidBeginEditing(_ textField: UITextField) {
+        if textField.tag == 0 {
+            textField.text = ""
+        }
         self.textFieldTag = textField.tag
     }
     

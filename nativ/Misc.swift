@@ -123,6 +123,48 @@ class Misc: NSObject {
         }
     }
     
+    func formatPhoneNumber(_ phoneNumber: String) -> String {
+        let numbersOnly = phoneNumber.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+        let length = numbersOnly.characters.count
+        let isLeadOne = numbersOnly.hasPrefix("1")
+        
+        guard length == 7 || length == 10 || (length == 11 && isLeadOne) else {
+            return phoneNumber
+        }
+        
+        let hasAreaCode = length >= 10
+        var sourceIndex = 0
+        
+        var leadingOne = ""
+        if isLeadOne {
+            leadingOne = "1 "
+            sourceIndex += 1
+        }
+        
+        var areaCode = ""
+        if hasAreaCode {
+            let areaCodeLength = 3
+            guard let areaCodeSubstring = numbersOnly.characters.substring(start: sourceIndex, offsetBy: areaCodeLength) else {
+                return phoneNumber
+            }
+            areaCode = String(format: "(%@)", areaCodeSubstring)
+            sourceIndex += areaCodeLength
+        }
+        
+        let prefixLength = 3
+        guard let prefix = numbersOnly.characters.substring(start: sourceIndex, offsetBy: prefixLength) else {
+            return phoneNumber
+        }
+        sourceIndex += prefixLength
+        
+        let suffixLength = 4
+        guard let suffix = numbersOnly.characters.substring(start: sourceIndex, offsetBy: suffixLength) else {
+            return phoneNumber
+        }
+        
+        return leadingOne + areaCode + prefix + "-" + suffix
+    }
+    
     func formatTextView(_ textView: UITextView) {
         textView.isScrollEnabled = false
         textView.layer.cornerRadius = 5
@@ -527,6 +569,20 @@ class Misc: NSObject {
 extension String {
     func trimSpace() -> String {
         return self.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+    }
+}
+
+extension String.CharacterView {
+    internal func substring(start: Int, offsetBy: Int) -> String? {
+        guard let substringStartIndex = self.index(startIndex, offsetBy: start, limitedBy: endIndex) else {
+            return nil
+        }
+        
+        guard let substringEndIndex = self.index(startIndex, offsetBy: start + offsetBy, limitedBy: endIndex) else {
+            return nil
+        }
+        
+        return String(self[substringStartIndex ..< substringEndIndex])
     }
 }
 

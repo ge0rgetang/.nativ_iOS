@@ -200,11 +200,13 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         let swipeRight: UISwipeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(self.swipeRight))
         swipeRight.direction = .right
         self.pondListTableView.addGestureRecognizer(swipeRight)
+        swipeRight.cancelsTouchesInView = false
         
         let swipeLeft: UISwipeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(self.swipeLeft))
         swipeLeft.direction = .left
         self.pondListTableView.addGestureRecognizer(swipeLeft)
-        
+        swipeLeft.cancelsTouchesInView = false
+
         self.setSideMenu()
         self.setMenuBarButton()
         
@@ -469,11 +471,8 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
             cell.trendingTagLabel.text = ".\(trendingTag)"
             cell.backgroundColor = .white
             let count = individualPost["info"] as! Int
-            if indexPath.row == 0 {
-                cell.infoLabel.text = "\(count) mention(s) in past few days"
-            } else {
-                cell.infoLabel.text = "\(count) mention(s)"
-            }
+            let countFormatted = misc.setCount(count)
+            cell.infoLabel.text = "\(countFormatted) mention(s)"
             return cell
             
         } else {
@@ -866,7 +865,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
             SideMenuManager.menuAnimationFadeStrength = 0.35
             SideMenuManager.menuAnimationTransformScaleFactor = 0.95
             SideMenuManager.menuAddPanGestureToPresent(toView: self.navigationController!.navigationBar)
-            SideMenuManager.menuAddScreenEdgePanGesturesToPresent(toView: self.navigationController!.view)
+            SideMenuManager.menuAddScreenEdgePanGesturesToPresent(toView: self.navigationController!.view, forMenu: UIRectEdge.left)
         }
     }
     
@@ -2438,6 +2437,9 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
             alertController.view.tintColor = misc.nativColor
             DispatchQueue.main.async(execute: { self.present(alertController, animated: true, completion: nil)
             })
+        } else {
+            self.displayAlert("Need to Sign In", alertMessage: "In order to share, you need to be signed into an account.")
+            return 
         }
     }
 

@@ -5545,11 +5545,11 @@
         <image name="upvoteUnselected" width="50" height="50"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="EkM-9g-yiq"/>
-        <segue reference="RA2-Za-m1B"/>
-        <segue reference="Bmc-KU-GN5"/>
-        <segue reference="aBX-ez-1bh"/>
-        <segue reference="c4K-MP-Tgu"/>
         <segue reference="1YW-X9-rq6"/>
+        <segue reference="ZHr-ha-lZ1"/>
+        <segue reference="lQz-rP-Xhb"/>
+        <segue reference="lo0-a8-IJg"/>
+        <segue reference="RA2-Za-m1B"/>
+        <segue reference="EkM-9g-yiq"/>
     </inferredMetricsTieBreakers>
 </document>
