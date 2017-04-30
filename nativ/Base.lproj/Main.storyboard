@@ -2102,6 +2102,79 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="JN0-1G-MB1">
+                                <rect key="frame" x="8" y="72" width="100" height="31"/>
+                                <color key="backgroundColor" red="0.94117647059999998" green="0.94117647059999998" blue="0.94117647059999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="100" id="cIi-Kw-n4R"/>
+                                    <constraint firstAttribute="height" constant="30" id="w2F-FR-psq"/>
+                                </constraints>
+                                <segments>
+                                    <segment title="" image="mapSegment"/>
+                                    <segment title="" image="listSegment"/>
+                                </segments>
+                                <color key="tintColor" red="0.27450980390000002" green="0.54901960780000003" blue="0.45098039220000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            </segmentedControl>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="itI-b8-yll">
+                                <rect key="frame" x="124" y="72" width="188" height="31"/>
+                                <color key="backgroundColor" red="0.94117647059999998" green="0.94117647059999998" blue="0.94117647059999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <segments>
+                                    <segment title="" image="pondSegment"/>
+                                    <segment title="" image="anonSegment">
+                                        <size key="contentOffset" width="0.0" height="1"/>
+                                    </segment>
+                                    <segment title="" image="hotSegment"/>
+                                    <segment title="" image="trendingSegment">
+                                        <size key="contentOffset" width="0.0" height="1"/>
+                                    </segment>
+                                    <segment title="" image="friendsSegment"/>
+                                </segments>
+                                <color key="tintColor" red="0.27450980390000002" green="0.54901960780000003" blue="0.45098039220000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            </segmentedControl>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4tk-6H-4hW">
+                                <rect key="frame" x="8" y="525" width="35" height="35"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="35" id="0Lt-HW-vAu"/>
+                                    <constraint firstAttribute="width" constant="35" id="U9i-bP-t0w"/>
+                                </constraints>
+                                <state key="normal" image="cameraSelected"/>
+                                <state key="disabled" image="cameraUnselected"/>
+                                <connections>
+                                    <action selector="cameraButtonTapped:" destination="Ple-Dk-bbU" eventType="touchUpInside" id="j01-jh-CtL"/>
+                                </connections>
+                            </button>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" bounces="NO" scrollEnabled="NO" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="GgW-PW-VBh">
+                                <rect key="frame" x="47" y="524.5" width="226" height="35.5"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="35" id="vBE-Mk-Pu9"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="kng-bC-Tuv">
+                                <rect key="frame" x="277" y="525" width="35" height="35"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="35" id="91y-bt-Wkb"/>
+                                    <constraint firstAttribute="height" constant="35" id="KdR-Be-Zha"/>
+                                </constraints>
+                                <state key="normal" image="sendSelected"/>
+                                <state key="disabled" image="sendUnselected"/>
+                                <connections>
+                                    <action selector="sendButtonTapped:" destination="Ple-Dk-bbU" eventType="touchUpInside" id="F6D-VP-FRd"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LOf-p7-wx0">
+                                <rect key="frame" x="292" y="524.5" width="20" height="15"/>
+                                <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="15" id="Cpd-ga-8PY"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="20" id="K6P-j8-uIW"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="IKM-5d-xMo">
                                 <rect key="frame" x="0.0" y="110" width="320" height="406.5"/>
                                 <color key="backgroundColor" red="0.94117647059999998" green="0.94117647059999998" blue="0.94117647059999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -2892,105 +2965,17 @@
                                             <outlet property="trendingTagLabel" destination="LDD-hu-Nca" id="9NE-2c-ahi"/>
                                         </connections>
                                     </tableViewCell>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="none" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="pondAdCell" rowHeight="78" id="VTB-Y7-PzR" customClass="PostAdTableViewCell" customModule="nativ" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="1046" width="320" height="78"/>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="none" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="adCell" rowHeight="140" id="VTB-Y7-PzR">
+                                        <rect key="frame" x="0.0" y="1046" width="320" height="140"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="VTB-Y7-PzR" id="FJE-hI-1N0">
-                                            <rect key="frame" x="0.0" y="0.0" width="320" height="77.5"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="320" height="139.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
-                                            <subviews>
-                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MH6-Wn-R8Y" customClass="GADNativeExpressAdView">
-                                                    <rect key="frame" x="8" y="2" width="304" height="69.5"/>
-                                                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                </view>
-                                            </subviews>
-                                            <constraints>
-                                                <constraint firstItem="MH6-Wn-R8Y" firstAttribute="leading" secondItem="FJE-hI-1N0" secondAttribute="leading" constant="8" id="9SO-LN-nVZ"/>
-                                                <constraint firstAttribute="bottom" secondItem="MH6-Wn-R8Y" secondAttribute="bottom" constant="6" id="FLX-F9-o8F"/>
-                                                <constraint firstItem="MH6-Wn-R8Y" firstAttribute="top" secondItem="FJE-hI-1N0" secondAttribute="top" constant="2" id="IMt-jF-JKa"/>
-                                                <constraint firstAttribute="trailing" secondItem="MH6-Wn-R8Y" secondAttribute="trailing" constant="8" id="MGh-MI-gGD"/>
-                                            </constraints>
                                         </tableViewCellContentView>
                                         <color key="backgroundColor" red="0.94117647059999998" green="0.94117647059999998" blue="0.94117647059999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                        <connections>
-                                            <outlet property="nativeExpressAdView" destination="MH6-Wn-R8Y" id="9Ks-Yw-NHK"/>
-                                        </connections>
                                     </tableViewCell>
                                 </prototypes>
                             </tableView>
-                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="JN0-1G-MB1">
-                                <rect key="frame" x="8" y="72" width="100" height="31"/>
-                                <color key="backgroundColor" red="0.94117647059999998" green="0.94117647059999998" blue="0.94117647059999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="100" id="cIi-Kw-n4R"/>
-                                    <constraint firstAttribute="height" constant="30" id="w2F-FR-psq"/>
-                                </constraints>
-                                <segments>
-                                    <segment title="" image="mapSegment"/>
-                                    <segment title="" image="listSegment"/>
-                                </segments>
-                                <color key="tintColor" red="0.27450980390000002" green="0.54901960780000003" blue="0.45098039220000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                            </segmentedControl>
-                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="itI-b8-yll">
-                                <rect key="frame" x="124" y="72" width="188" height="31"/>
-                                <color key="backgroundColor" red="0.94117647059999998" green="0.94117647059999998" blue="0.94117647059999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <segments>
-                                    <segment title="" image="pondSegment"/>
-                                    <segment title="" image="anonSegment">
-                                        <size key="contentOffset" width="0.0" height="1"/>
-                                    </segment>
-                                    <segment title="" image="hotSegment"/>
-                                    <segment title="" image="trendingSegment">
-                                        <size key="contentOffset" width="0.0" height="1"/>
-                                    </segment>
-                                    <segment title="" image="friendsSegment"/>
-                                </segments>
-                                <color key="tintColor" red="0.27450980390000002" green="0.54901960780000003" blue="0.45098039220000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                            </segmentedControl>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4tk-6H-4hW">
-                                <rect key="frame" x="8" y="525" width="35" height="35"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="35" id="0Lt-HW-vAu"/>
-                                    <constraint firstAttribute="width" constant="35" id="U9i-bP-t0w"/>
-                                </constraints>
-                                <state key="normal" image="cameraSelected"/>
-                                <state key="disabled" image="cameraUnselected"/>
-                                <connections>
-                                    <action selector="cameraButtonTapped:" destination="Ple-Dk-bbU" eventType="touchUpInside" id="j01-jh-CtL"/>
-                                </connections>
-                            </button>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" bounces="NO" scrollEnabled="NO" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="GgW-PW-VBh">
-                                <rect key="frame" x="47" y="524.5" width="226" height="35.5"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="35" id="vBE-Mk-Pu9"/>
-                                </constraints>
-                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
-                            </textView>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="kng-bC-Tuv">
-                                <rect key="frame" x="277" y="525" width="35" height="35"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="35" id="91y-bt-Wkb"/>
-                                    <constraint firstAttribute="height" constant="35" id="KdR-Be-Zha"/>
-                                </constraints>
-                                <state key="normal" image="sendSelected"/>
-                                <state key="disabled" image="sendUnselected"/>
-                                <connections>
-                                    <action selector="sendButtonTapped:" destination="Ple-Dk-bbU" eventType="touchUpInside" id="F6D-VP-FRd"/>
-                                </connections>
-                            </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LOf-p7-wx0">
-                                <rect key="frame" x="292" y="524.5" width="20" height="15"/>
-                                <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="15" id="Cpd-ga-8PY"/>
-                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="20" id="K6P-j8-uIW"/>
-                                </constraints>
-                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
-                                <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                         </subviews>
                         <color key="backgroundColor" red="0.94117647059999998" green="0.94117647059999998" blue="0.94117647059999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <color key="tintColor" red="0.27450980390000002" green="0.54901960780000003" blue="0.45098039220000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -3005,6 +2990,7 @@
                             <constraint firstItem="itI-b8-yll" firstAttribute="top" secondItem="JN0-1G-MB1" secondAttribute="top" id="HIk-BH-nBJ"/>
                             <constraint firstItem="IKM-5d-xMo" firstAttribute="leading" secondItem="Jw4-Gx-wdb" secondAttribute="leading" id="IFM-d7-vrm"/>
                             <constraint firstItem="JN0-1G-MB1" firstAttribute="top" secondItem="yxC-FX-3jl" secondAttribute="bottom" constant="8" id="MLq-9i-kru"/>
+                            <constraint firstItem="IKM-5d-xMo" firstAttribute="top" secondItem="JN0-1G-MB1" secondAttribute="bottom" constant="8" id="PQW-j9-OOc"/>
                             <constraint firstItem="GgW-PW-VBh" firstAttribute="top" secondItem="IKM-5d-xMo" secondAttribute="bottom" constant="8" id="TO7-Qi-v5A"/>
                             <constraint firstItem="4tk-6H-4hW" firstAttribute="bottom" secondItem="GgW-PW-VBh" secondAttribute="bottom" id="TOt-Om-9vg"/>
                             <constraint firstItem="LOf-p7-wx0" firstAttribute="trailing" secondItem="kng-bC-Tuv" secondAttribute="trailing" id="Tph-7e-Buy"/>
@@ -3012,7 +2998,6 @@
                             <constraint firstItem="LOf-p7-wx0" firstAttribute="top" secondItem="GgW-PW-VBh" secondAttribute="top" id="gNk-sR-Cc6"/>
                             <constraint firstItem="itI-b8-yll" firstAttribute="leading" secondItem="JN0-1G-MB1" secondAttribute="trailing" constant="16" id="h4v-4g-IcN"/>
                             <constraint firstAttribute="trailing" secondItem="IKM-5d-xMo" secondAttribute="trailing" id="pI8-g8-I3F"/>
-                            <constraint firstItem="IKM-5d-xMo" firstAttribute="top" secondItem="JN0-1G-MB1" secondAttribute="bottom" constant="8" id="pNY-Jm-0PK"/>
                             <constraint firstItem="kng-bC-Tuv" firstAttribute="bottom" secondItem="GgW-PW-VBh" secondAttribute="bottom" id="sFh-5m-enV"/>
                         </constraints>
                     </view>
@@ -5546,10 +5531,10 @@
     </resources>
     <inferredMetricsTieBreakers>
         <segue reference="1YW-X9-rq6"/>
-        <segue reference="ZHr-ha-lZ1"/>
-        <segue reference="lQz-rP-Xhb"/>
-        <segue reference="lo0-a8-IJg"/>
         <segue reference="RA2-Za-m1B"/>
+        <segue reference="qe9-HK-boa"/>
+        <segue reference="Bmc-KU-GN5"/>
         <segue reference="EkM-9g-yiq"/>
+        <segue reference="jm9-a7-4vf"/>
     </inferredMetricsTieBreakers>
 </document>

@@ -473,7 +473,7 @@ class Misc: NSObject {
     
     func getNextPageNumber(_ posts: [[String:Any]]) -> Int {
         let count = posts.count
-        let adCount = count/20
+        let adCount = count/40
         let postsCount = count - adCount
         let nextPage = postsCount/42
         

@@ -1257,6 +1257,7 @@ class PondMapViewController: UIViewController, CLLocationManagerDelegate, MKMapV
         let isExact: String = "yes"
         let lastPostID: Int = 0
         let pageNumber: Int = 0
+        let hours: Int = 168
         
         var sort: String
         if self.segment == "hot" {
@@ -1296,7 +1297,7 @@ class PondMapViewController: UIViewController, CLLocationManagerDelegate, MKMapV
             case "trendingList":
                 if self.firstLoad || self.trendingList.isEmpty {
                     getURL = URL(string: "https://dotnative.io/getTrendingTags")
-                    getString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&longitude=\(self.longitude)&latitude=\(self.latitude)&radius=\(self.radius)&timeDel=\(self.timeDel)&hours=72"
+                    getString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&longitude=\(self.longitude)&latitude=\(self.latitude)&radius=\(self.radius)&timeDel=\(self.timeDel)&hours=\(hours)"
                 } else {
                     getURL = URL(string: "https://dotnative.io/getMixedPost")
                     var tagArray: [String] = []

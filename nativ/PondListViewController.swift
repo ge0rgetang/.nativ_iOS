@@ -80,9 +80,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
     var tagsToRemove: [String] = []
     var friendPosts: [[String:Any]] = []
     var lastContentOffset: CGFloat = 0
-    
-    let loadingImageArray: [UIImage] = [UIImage(named: "loading1")!, UIImage(named: "loading2")!, UIImage(named: "loading3")!, UIImage(named: "loading4")!, UIImage(named: "loading5")!, UIImage(named: "loading6")!, UIImage(named: "loading7")!, UIImage(named: "loading7")!]
-    
+        
     let misc = Misc()
     var activityView = UIView()
     var activityIndicator = UIActivityIndicatorView()
@@ -91,6 +89,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
     var badgeButton = MIBadgeButton()
     var badgeBarButton = UIBarButtonItem()
     var dimView = UIView()
+    var nativeExpressAdArray = [GADNativeExpressAdView]()
     
     var ref = FIRDatabase.database().reference()
     
@@ -297,7 +296,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         self.logViewPondList()
         misc.setSideMenuIndex(0)
         self.updateBadge()
-        self.setNotifications()        
+        self.setNotifications()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -434,35 +433,21 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         
         if postID == -2 {
             // ad
-            let cell = tableView.dequeueReusableCell(withIdentifier: "pondAdCell", for: indexPath) as! PostAdTableViewCell
-            cell.nativeExpressAdView.adUnitID = "ca-app-pub-3615009076081464/9104211830"
-            cell.nativeExpressAdView.rootViewController = self
-            cell.nativeExpressAdView.adSize = GADAdSizeFromCGSize(CGSize(width: self.view.frame.size.width - 16, height: 132))
-            let request = GADRequest()
-            request.testDevices = ["e3d4c57ec74eb09b126b470353436b8e"]
-            let birthArray = misc.getMyBirthComponents()
-            if !birthArray.contains(-2) {
-                var components = DateComponents()
-                components.month = birthArray[0]
-                components.day = birthArray[1]
-                components.year = birthArray[2]
-                request.birthday = Calendar.current.date(from: components)
+            let cell = tableView.dequeueReusableCell(withIdentifier: "adCell", for: indexPath)
+            let ads = self.nativeExpressAdArray
+            var ad: GADNativeExpressAdView
+            let index = self.getAdIndex(indexPath.row)
+            if index > ads.count - 1 {
+                ad = ads.first!
+            } else {
+                ad =  ads[index]
             }
-            if let gender = UserDefaults.standard.string(forKey: "gender.nativ") {
-                if gender == "male" {
-                    request.gender = .male
-                }
-                if gender == "female" {
-                    request.gender = .female
-                }
+            
+            for subview in cell.contentView.subviews {
+                subview.removeFromSuperview()
             }
-            cell.nativeExpressAdView.load(request)
-            cell.nativeExpressAdView.backgroundColor = UIColor.white
-            cell.nativeExpressAdView.layer.masksToBounds = false
-            cell.nativeExpressAdView.layer.cornerRadius = 2.5
-            cell.nativeExpressAdView.layer.shadowOffset = CGSize(width: -1, height: 1)
-            cell.nativeExpressAdView.layer.shadowOpacity = 0.42
-            cell.nativeExpressAdView.sizeToFit()
+            cell.contentView.addSubview(ad)
+            ad.center = CGPoint(x: cell.contentView.frame.midX, y: cell.contentView.frame.midY - 2)
             return cell
             
         } else if self.segment == "trendingList" {
@@ -482,14 +467,12 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
             case "pond", "friend":
                 if let imageURL = individualPost["imageURL"] as? URL {
                     cell = tableView.dequeueReusableCell(withIdentifier: "pondListImageCell", for: indexPath) as! PostTableViewCell
-                    let placeholder = UIImage.animatedImage(with: self.loadingImageArray, duration: 0.33)
                     let block: SDExternalCompletionBlock = { (image, error, cacheType, url) -> Void in
                         cell.postImageView.image = image
-                        cell.postImageView.contentMode = .scaleAspectFill
                         cell.setNeedsLayout()
                     }
-                    cell.postImageView.contentMode = .scaleAspectFit
-                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: placeholder, options: .progressiveDownload, completed: block)
+                    cell.postImageView.contentMode = .scaleAspectFill
+                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: nil, options: .progressiveDownload, completed: block)
                     let tapToViewImage = UITapGestureRecognizer(target: self, action: #selector(self.presentImage))
                     cell.postImageView.addGestureRecognizer(tapToViewImage)
                 } else {
@@ -498,14 +481,12 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
             case "anon":
                 if let imageURL = individualPost["imageURL"] as? URL {
                     cell = tableView.dequeueReusableCell(withIdentifier: "anonListImageCell", for: indexPath) as! PostTableViewCell
-                    let placeholder = UIImage.animatedImage(with: self.loadingImageArray, duration: 0.33)
                     let block: SDExternalCompletionBlock = { (image, error, cacheType, url) -> Void in
                         cell.postImageView.image = image
-                        cell.postImageView.contentMode = .scaleAspectFill
                         cell.setNeedsLayout()
                     }
-                    cell.postImageView.contentMode = .scaleAspectFit
-                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: placeholder, options: .progressiveDownload, completed: block)
+                    cell.postImageView.contentMode = .scaleAspectFill
+                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: nil, options: .progressiveDownload, completed: block)
                     let tapToViewImage = UITapGestureRecognizer(target: self, action: #selector(self.presentImage))
                     cell.postImageView.addGestureRecognizer(tapToViewImage)
                 } else {
@@ -518,14 +499,12 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                     } else {
                         cell = tableView.dequeueReusableCell(withIdentifier: "anonListImageCell", for: indexPath) as! PostTableViewCell
                     }
-                    let placeholder = UIImage.animatedImage(with: self.loadingImageArray, duration: 0.33)
                     let block: SDExternalCompletionBlock = { (image, error, cacheType, url) -> Void in
                         cell.postImageView.image = image
-                        cell.postImageView.contentMode = .scaleAspectFill
                         cell.setNeedsLayout()
                     }
-                    cell.postImageView.contentMode = .scaleAspectFit
-                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: placeholder, options: .progressiveDownload, completed: block)
+                    cell.postImageView.contentMode = .scaleAspectFill
+                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: nil, options: .progressiveDownload, completed: block)
                     let tapToViewImage = UITapGestureRecognizer(target: self, action: #selector(self.presentImage))
                     cell.postImageView.addGestureRecognizer(tapToViewImage)
                 } else {
@@ -665,6 +644,36 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         return UITableViewAutomaticDimension
     }
     
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        var posts: [[String:Any]]
+        switch self.segment {
+        case "pond":
+            posts = self.pondPosts
+        case "anon":
+            posts = self.anonPosts
+        case "hot":
+            posts = self.hotPosts
+        case "trending":
+            posts = self.trendingPosts
+        case "friend":
+            posts = self.friendPosts
+        default:
+            posts = []
+        }
+        
+        if !posts.isEmpty {
+            let individualPost = posts[indexPath.row]
+            let postID = individualPost["postID"] as! Int
+            if postID == -2 {
+                return 140
+            } else {
+                return UITableViewAutomaticDimension
+            }
+        } else {
+            return UITableViewAutomaticDimension
+        }
+    }
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         self.parentRow = indexPath.row
         
@@ -700,12 +709,12 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                 return
             }
             
-            if !posts.isEmpty && !self.isKeyboardUp {
+            let individualPost = posts[indexPath.row]
+            let postID = individualPost["postID"] as! Int
+            if !posts.isEmpty && !self.isKeyboardUp && postID > 0 {
                 let cell = tableView.cellForRow(at: indexPath) as! PostTableViewCell
                 cell.replyPicImageView.isHighlighted = true
                 cell.whiteView.backgroundColor = misc.nativFade
-                let individualPost = posts[indexPath.row]
-                let postID = individualPost["postID"] as! Int
                 if postID > 0 {
                     self.parentPostToPass = individualPost
                     self.performSegue(withIdentifier: "fromPondListToDrop", sender: self)
@@ -1698,7 +1707,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
             self.observePond()
         } else if offset == (contentHeight - frameHeight) {
             self.scrollPosition = "bottom"
-            if posts.count >= 46 {
+            if posts.count >= 43 {
                 self.getPondList()
             }
         } else {
@@ -2310,6 +2319,75 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         }
     }
     
+    // MARK: - Ads
+    
+    func loadAds() {
+        var posts: [[String:Any]]
+        switch self.segment {
+        case "pond":
+            posts = self.pondPosts
+        case "anon":
+            posts = self.anonPosts
+        case "hot":
+            posts = self.hotPosts
+        case "trending":
+            posts = self.trendingPosts
+        case "friend":
+            posts = self.friendPosts
+        default:
+            posts = []
+        }
+        
+        let count = posts.count
+        let adCount = count/40
+        for _ in 0..<adCount {
+            let adSize = GADAdSizeFromCGSize(CGSize(width: self.view.frame.size.width - 16, height: 132))
+            let ad = GADNativeExpressAdView(adSize: adSize)
+            ad?.adUnitID = "ca-app-pub-3615009076081464/9104211830"
+            ad?.rootViewController = self
+            let request = GADRequest()
+            request.testDevices = ["e3d4c57ec74eb09b126b470353436b8e"]
+            let birthArray = misc.getMyBirthComponents()
+            if !birthArray.contains(-2) {
+                var components = DateComponents()
+                components.month = birthArray[0]
+                components.day = birthArray[1]
+                components.year = birthArray[2]
+                request.birthday = Calendar.current.date(from: components)
+            }
+            if let gender = UserDefaults.standard.string(forKey: "gender.nativ") {
+                if gender == "male" {
+                    request.gender = .male
+                }
+                if gender == "female" {
+                    request.gender = .female
+                }
+            }
+            ad?.layer.masksToBounds = false
+            ad?.layer.cornerRadius = 2.5
+            ad?.layer.shadowOffset = CGSize(width: -1, height: 1)
+            ad?.layer.shadowOpacity = 0.42
+            ad?.load(request)
+            self.nativeExpressAdArray.append(ad!)
+        }
+    }
+    
+    func getAdIndex(_ row: Int) -> Int {
+        if row <= 40 {
+            return 0
+        } else if row <= 80 {
+            return 1
+        } else if row <= 120 {
+            return 2
+        } else if row <= 160 {
+            return 3
+        } else if row <= 200 {
+            return 4
+        } else {
+            return 0
+        }
+    }
+    
     // MARK: - AWS
     
     func getNewPosts() {
@@ -2766,7 +2844,8 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         let postID: Int = 0
         let picSize: String = "small"
         let isExact: String = "no"
-        
+        let hours: Int = 168
+
         var lastPostID: Int
         var pageNumber: Int
         var posts: [[String:Any]]
@@ -2784,7 +2863,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
         default:
             posts = [["postID": 0]]
         }
-        if self.scrollPosition == "bottom" && posts.count >= 46 {
+        if self.scrollPosition == "bottom" && posts.count >= 43 {
             let lastPost = posts.last!
             lastPostID = lastPost["postID"] as! Int
             pageNumber = misc.getNextPageNumber(posts)
@@ -2830,8 +2909,12 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                 getURL = URL(string: "https://dotnative.io/getMixedPost")
                 getString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&longitude=\(self.longitude)&latitude=\(self.latitude)&postID=\(postID)&sort=\(sort)&isExact=\(isExact)&size=\(picSize)&lastPostID=\(lastPostID)&pageNumber=\(pageNumber)&isMine=\(isMine)&radius=\(self.radius)&timeDel=\(self.timeDel)"
             case "trendingList":
+                var radius = self.radius
+                if radius < 1.5 {
+                    radius = 1.5
+                }
                 getURL = URL(string: "https://dotnative.io/getTrendingTags")
-                getString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&longitude=\(self.longitude)&latitude=\(self.latitude)&radius=\(self.radius)&timeDel=\(self.timeDel)&hours=72"
+                getString = "iv=\(iv)&token=\(cipherText)&myID=\(self.myID)&longitude=\(self.longitude)&latitude=\(self.latitude)&radius=\(radius)&timeDel=\(self.timeDel)&hours=\(hours)"
             case "trending":
                 getURL = URL(string: "https://dotnative.io/getMixedPost")
                 let text = self.textView.text!
@@ -2998,7 +3081,7 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                                     let ad = ["postID": -2]
                                     var i: Int = 1
                                     for _ in posts {
-                                        if i%20 == 0 {
+                                        if i%40 == 0 {
                                             posts.insert(ad, at: i-1)
                                         }
                                         i = i+1
@@ -3067,6 +3150,8 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                                             return
                                         }
                                     }
+                                    
+                                    self.loadAds()
                                     
                                     if !posts.isEmpty {
                                         var firstRows = 4

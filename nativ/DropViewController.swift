@@ -53,8 +53,6 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
     var scrollToTopButton = UIButton()
     var dimView = UIView()
     
-    let loadingImageArray: [UIImage] = [UIImage(named: "loading1")!, UIImage(named: "loading2")!, UIImage(named: "loading3")!, UIImage(named: "loading4")!, UIImage(named: "loading5")!, UIImage(named: "loading6")!, UIImage(named: "loading7")!, UIImage(named: "loading7")!]
-
     weak var editPondParentDelegate: EditPondParentProtocol?
     
     var ref = FIRDatabase.database().reference()
@@ -221,14 +219,12 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             if let handle = individualPost["userHandle"] as? String {
                 if let imageURL = individualPost["imageURL"] as? URL {
                     cell = tableView.dequeueReusableCell(withIdentifier: "pondHeaderImageCell") as! PostTableViewCell
-                    let placeholder = UIImage.animatedImage(with: self.loadingImageArray, duration: 0.33)
                     let block: SDExternalCompletionBlock = { (image, error, cacheType, url) -> Void in
                         cell.postImageView.image = image
-                        cell.postImageView.contentMode = .scaleAspectFill
                         cell.setNeedsLayout()
                     }
-                    cell.postImageView.contentMode = .scaleAspectFit
-                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: placeholder, options: .progressiveDownload, completed: block)
+                    cell.postImageView.contentMode = .scaleAspectFill
+                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: nil, options: .progressiveDownload, completed: block)
                     let tapToViewImage = UITapGestureRecognizer(target: self, action: #selector(self.presentImage))
                     cell.postImageView.addGestureRecognizer(tapToViewImage)
                 } else {
@@ -256,14 +252,12 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             } else {
                 if let imageURL = self.parentPost["imageURL"] as? URL {
                     cell = tableView.dequeueReusableCell(withIdentifier: "anonHeaderImageCell") as! PostTableViewCell
-                    let placeholder = UIImage.animatedImage(with: self.loadingImageArray, duration: 0.33)
                     let block: SDExternalCompletionBlock = { (image, error, cacheType, url) -> Void in
                         cell.postImageView.image = image
-                        cell.postImageView.contentMode = .scaleAspectFill
                         cell.setNeedsLayout()
                     }
-                    cell.postImageView.contentMode = .scaleAspectFit
-                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: placeholder, options: .progressiveDownload, completed: block)
+                    cell.postImageView.contentMode = .scaleAspectFill
+                    cell.postImageView.sd_setImage(with: imageURL, placeholderImage: nil, options: .progressiveDownload, completed: block)
                     let tapToViewImage = UITapGestureRecognizer(target: self, action: #selector(self.presentImage))
                     cell.postImageView.addGestureRecognizer(tapToViewImage)
                 } else {

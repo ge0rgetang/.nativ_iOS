@@ -145,9 +145,7 @@ class AboutViewController: UIViewController, UIPopoverPresentationControllerDele
     // MARK: - Label content
     
     var aboutText =
-        "There was no sudden epiphany. It was the train ride on the BART on a rainy day. It was watching the steady flow of foot traffic from a corner cafe. It was daydreaming during lecture. It was even waiting in one of many indiscernable lines. The idea was a series of small moments that added up over time." + "\r\n\n" +
-        "I wanted to get people in touch with someone that could be sitting right next to them. I wanted actual, tangible, real connection with real participation in the real world. I wanted change. So I got together with my buddy Tam and decided to try to change something. I figured, even if that change was a tiny drop, at the end of the day, I'd still have a cool app." + "\r\n\n" +
-        ".nativ was born."
+        "There was no sudden epiphany. The idea was a series of small moments that added up over time. I wanted a truly local network. So I made an app."
     
     var creditText =
         "Our main app icon, was designed by Ashley J.B. Chen. Check her out at ashleyjbchen.com!" + "\r\n\n" +
@@ -160,7 +158,6 @@ class AboutViewController: UIViewController, UIPopoverPresentationControllerDele
             "Notification (flipped across y-axis), by Dinosoft Labs" + "\r\n\n" +
             "Drops, by Drishya" + "\r\n\n" +
             "Fire, by HLD" + "\r\n\n" +
-            "Loading (rotated over several angles), by Hopkins" + "\r\n\n" +
             "Chat, by i cons" + "\r\n\n" +
             "Eye Mask, by Jems Mayor" + "\r\n\n" +
             "Reply (flipped across y-axis), by joe pictos" + "\r\n\n" +
