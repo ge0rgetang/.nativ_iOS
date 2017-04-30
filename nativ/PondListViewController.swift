@@ -2484,7 +2484,6 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
             
             let shareFBAction = UIAlertAction(title: "Share on Facebook", style: .default, handler: { action in
                 cell.sharePicImageView.isHighlighted = false
-                cell.shareCountLabel.text = "\(newShareCount)"
                 
                 if let imageURL = individualPost["imageURL"] as? URL {
                     self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Facebook", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
@@ -2496,7 +2495,6 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
             
             let shareTwitterAction = UIAlertAction(title: "Share on Twitter", style: .default, handler: { action in
                 cell.sharePicImageView.isHighlighted = false
-                cell.shareCountLabel.text = "\(newShareCount)"
                 
                 if let imageURL = individualPost["imageURL"] as? URL {
                     self.sharePost(postID, postType: postType, postContent: postContent, socialMedia: "Twitter", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
@@ -2569,13 +2567,6 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                                     self.logAnonPostShared(postID, socialMedia: socialMedia)
                                 }
                                 self.writePostShared(postID, postType: postType)
-                                if let url = imageURL {
-                                    if socialMedia == "Facebook" {
-                                        self.sharePhotoFB(url)
-                                    } else {
-                                        self.sharePhotoTwitter(url)
-                                    }
-                                }
                                 switch self.segment {
                                 case "pond":
                                     self.pondPosts[self.parentRow]["shareCount"] = newShareCount
@@ -2589,6 +2580,14 @@ class PondListViewController: UIViewController, UITableViewDelegate, UITableView
                                     self.friendPosts[self.parentRow]["shareCount"] = newShareCount
                                 default:
                                     return
+                                }
+                                self.pondListTableView.reloadRows(at: [IndexPath(row: self.parentRow, section: 0)], with: .none)
+                                if let url = imageURL {
+                                    if socialMedia == "Facebook" {
+                                        self.sharePhotoFB(url)
+                                    } else {
+                                        self.sharePhotoTwitter(url)
+                                    }
                                 }
                                 if let view = orView {
                                     if socialMedia == "Facebook" {

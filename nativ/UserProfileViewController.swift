@@ -43,9 +43,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
     var heightAtIndexPath: [IndexPath:CGFloat] = [:]
     var userInfo: [String:Any] = [:]
     var userPosts:[[String:Any]] = []
-    
-    let loadingImageArray: [UIImage] = [UIImage(named: "loading1")!, UIImage(named: "loading2")!, UIImage(named: "loading3")!, UIImage(named: "loading4")!, UIImage(named: "loading5")!, UIImage(named: "loading6")!, UIImage(named: "loading7")!, UIImage(named: "loading7")!]
-    
+        
     let misc = Misc()
     var backButton = UIButton()
     var settingsButton = UIButton()
@@ -1029,29 +1027,23 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
         
         let shareFBAction = UIAlertAction(title: "Share on Facebook", style: .default, handler: { action in
             cell.sharePicImageView.isHighlighted = false
-            cell.shareCountLabel.text = "\(newShareCount)"
             
             if let imageURL = individualPost["imageURL"] as? URL {
-                self.sharePhotoFB(imageURL)
+                self.sharePost(postID, postContent: postContent, socialMedia: "Facebook", index: indexPath.row - 1, imageURL: imageURL , orView: nil, newShareCount: newShareCount)
             } else {
-                self.shareOnFB(cell.whiteView)
+                self.sharePost(postID, postContent: postContent, socialMedia: "Facebook", index: indexPath.row - 1, imageURL: nil , orView: cell.whiteView, newShareCount: newShareCount)
             }
-            self.sharePost(postID, postContent: postContent, socialMedia: "Facebook")
-            self.userPosts[indexPath.row - 1]["shareCount"] = newShareCount
         })
         alertController.addAction(shareFBAction)
         
         let shareTwitterAction = UIAlertAction(title: "Share on Twitter", style: .default, handler: { action in
             cell.sharePicImageView.isHighlighted = false
-            cell.shareCountLabel.text = "\(newShareCount)"
             
             if let imageURL = individualPost["imageURL"] as? URL {
-                self.sharePhotoTwitter(imageURL)
+                self.sharePost(postID, postContent: postContent, socialMedia: "Twitter", index: indexPath.row - 1, imageURL: imageURL , orView: nil, newShareCount: newShareCount)
             } else {
-                self.shareOnTwitter(cell.whiteView)
+                self.sharePost(postID, postContent: postContent, socialMedia: "Twitter", index: indexPath.row - 1, imageURL: nil , orView: cell.whiteView, newShareCount: newShareCount)
             }
-            self.sharePost(postID, postContent: postContent, socialMedia: "Twitter")
-            self.userPosts[indexPath.row - 1]["shareCount"] = newShareCount
             
         })
         alertController.addAction(shareTwitterAction)
@@ -1066,7 +1058,7 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
         })
     }
     
-    func sharePost(_ postID: Int, postContent: String, socialMedia: String) {
+    func sharePost(_ postID: Int, postContent: String, socialMedia: String, index: Int, imageURL: URL?, orView: UIView?, newShareCount: Int) {
         let postType: String = "pond"
         
         let token = misc.generateToken(16, firebaseID: self.myIDFIR)
@@ -1112,6 +1104,22 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
                             if status == "success" {
                                 self.logPondPostShared(postID, socialMedia: socialMedia)
                                 self.writePostShared(postID)
+                                self.userPosts[index]["shareCount"] = newShareCount
+                                self.userProfileTableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .none)
+                                if let view = orView {
+                                    if socialMedia == "Facebook" {
+                                        self.shareOnFB(view)
+                                    } else {
+                                        self.shareOnTwitter(view)
+                                    }
+                                }
+                                if let url = imageURL {
+                                    if socialMedia == "Facebook" {
+                                        self.sharePhotoFB(url)
+                                    } else {
+                                        self.sharePhotoTwitter(url)
+                                    }
+                                }
                             }
                         })
                     }

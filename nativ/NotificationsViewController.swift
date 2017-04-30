@@ -406,7 +406,7 @@ class NotificationsViewController: UIViewController, UITableViewDelegate, UITabl
     
     func addScrollToTop(_ title: String) {
         self.scrollToTopButton.removeFromSuperview()
-        self.scrollToTopButton = UIButton(frame: CGRect(x: self.view.frame.midX - 27.5, y: self.notificationsTableView.frame.origin.y + 8, width: 55, height: 30))
+        self.scrollToTopButton = UIButton(frame: CGRect(x: self.view.frame.midX - 27.5, y: self.notificationsTableView.frame.origin.y + 8, width: 65, height: 30))
         self.scrollToTopButton.layer.backgroundColor = UIColor(white: 0, alpha: 0.025).cgColor
         self.scrollToTopButton.addTarget(self, action: #selector(self.scrollToTop), for: .touchUpInside)
         self.scrollToTopButton.addTarget(self, action: #selector(colorTopButtonUp), for: .touchUpInside)

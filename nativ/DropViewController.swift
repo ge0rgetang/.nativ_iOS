@@ -1334,7 +1334,6 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             
             let shareFBAction = UIAlertAction(title: "Share on Facebook", style: .default, handler: { action in
                 cell.sharePicImageView.isHighlighted = false
-                cell.shareCountLabel.text = "\(newShareCount)"
                 
                 if let imageURL = individualPost["imageURL"] as? URL {
                     self.sharePost(postContent, socialMedia: "Facebook", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
@@ -1346,7 +1345,6 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
             
             let shareTwitterAction = UIAlertAction(title: "Share on Twitter", style: .default, handler: { action in
                 cell.sharePicImageView.isHighlighted = false
-                cell.shareCountLabel.text = "\(newShareCount)"
                 
                 if let imageURL = individualPost["imageURL"] as? URL {
                     self.sharePost(postContent, socialMedia: "Twitter", imageURL: imageURL, orView: nil, newShareCount: newShareCount)
@@ -1426,6 +1424,7 @@ class DropViewController: UIViewController, UITextViewDelegate, UITableViewDeleg
                                     self.logAnonPostShared(self.postID, socialMedia: socialMedia)
                                 }
                                 self.parentPost["shareCount"] = newShareCount
+                                self.dropTableView.reloadRows(at: [IndexPath(row: 0, section: 0)], with: .none)
                                 self.writePostShared(self.postID, postType: postType)
                                 if let url = imageURL {
                                     if socialMedia == "Facebook" {
