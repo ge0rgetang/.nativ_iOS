@@ -348,14 +348,12 @@ class UserProfileViewController: UIViewController, UITableViewDelegate, UITableV
             let individualPost = self.userPosts[indexPath.row - 1]
             if let imageURL = individualPost["imageURL"] as? URL {
                 cell = tableView.dequeueReusableCell(withIdentifier: "pondUserImageCell", for: indexPath) as! PostTableViewCell
-                let placeholder = UIImage.animatedImage(with: self.loadingImageArray, duration: 0.33)
                 let block: SDExternalCompletionBlock = { (image, error, cacheType, url) -> Void in
                     cell.postImageView.image = image
-                    cell.postImageView.contentMode = .scaleAspectFill
                     cell.setNeedsLayout()
                 }
-                cell.postImageView.contentMode = .scaleAspectFit
-                cell.postImageView.sd_setImage(with: imageURL, placeholderImage: placeholder, options: .progressiveDownload, completed: block)
+                cell.postImageView.contentMode = .scaleAspectFill
+                cell.postImageView.sd_setImage(with: imageURL, placeholderImage: nil, options: .progressiveDownload, completed: block)
                 let tapToViewImage = UITapGestureRecognizer(target: self, action: #selector(self.presentImage))
                 cell.postImageView.addGestureRecognizer(tapToViewImage)
             } else {
